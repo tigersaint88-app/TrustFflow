@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="TrustFlow — a trust-minimized coordination protocol for real-world workflows on Ethereum." />
+  <title>TrustFlow — Trust-Minimized Workflow Coordination on Ethereum</title>
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1733;
+      --card:#111a3b;
+      --text:#e9edff;
+      --muted:#b9c2ff;
+      --line:rgba(255,255,255,.10);
+      --accent:#7aa6ff;
+      --accent2:#5cf0c7;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 450px at 20% -10%, rgba(122,166,255,.25), transparent 60%),
+        radial-gradient(800px 420px at 95% 10%, rgba(92,240,199,.18), transparent 55%),
+        radial-gradient(1000px 600px at 30% 120%, rgba(122,166,255,.16), transparent 60%),
+        var(--bg);
+      line-height:1.55;
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 60px}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; padding:14px 16px; border:1px solid var(--line);
+      background:rgba(15,23,51,.55); backdrop-filter: blur(10px);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width:220px}
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 25px rgba(122,166,255,.25);
+      position:relative; overflow:hidden;
+    }
+    .logo:before{
+      content:""; position:absolute; inset:-20%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 55%);
+      transform: rotate(12deg);
+    }
+    .brand h1{font-size:15px; margin:0; letter-spacing:.2px}
+    .brand p{margin:0; font-size:12px; color:var(--muted)}
+    nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+    nav a{
+      text-decoration:none; font-size:13px; color:var(--muted);
+      padding:8px 10px; border-radius:12px; border:1px solid transparent;
+    }
+    nav a:hover{border-color:var(--line); color:var(--text); background:rgba(17,26,59,.55)}
+    .hero{
+      margin-top:18px;
+      display:grid; grid-template-columns: 1.35fr .65fr; gap:14px;
+    }
+    @media (max-width: 920px){
+      .hero{grid-template-columns:1fr}
+      nav{justify-content:flex-start}
+      .brand{min-width:auto}
+    }
+    .panel{
+      border:1px solid var(--line);
+      background: rgba(15,23,51,.42);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:20px;
+    }
+    .kicker{
+      display:inline-flex; align-items:center; gap:10px;
+      font-family: var(--mono);
+      font-size:12px; color:var(--muted);
+      padding:8px 10px; border:1px solid var(--line);
+      border-radius:999px; background: rgba(17,26,59,.45);
+    }
+    .dot{
+      width:8px; height:8px; border-radius:99px;
+      background: var(--accent2);
+      box-shadow: 0 0 18px rgba(92,240,199,.45);
+    }
+    h2{margin:14px 0 8px; font-size:28px; letter-spacing:.2px}
+    .subtitle{margin:0; color:var(--muted); max-width:72ch}
+    .ctaRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:14px; text-decoration:none;
+      border:1px solid var(--line); background: rgba(17,26,59,.55);
+      color:var(--text); font-size:13px;
+    }
+    .btn.primary{
+      border-color: rgba(122,166,255,.6);
+      background: linear-gradient(135deg, rgba(122,166,255,.25), rgba(92,240,199,.14));
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn svg{width:16px; height:16px; opacity:.95}
+    .grid{
+      margin-top:14px;
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:14px;
+    }
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--line);
+      background: rgba(17,26,59,.48);
+      border-radius: var(--radius);
+      padding:16px;
+      box-shadow: 0 14px 35px rgba(0,0,0,.25);
+    }
+    .card h3{margin:0 0 8px; font-size:15px}
+    .card p{margin:0; color:var(--muted); font-size:13px}
+    .section{margin-top:14px}
+    .section h3{margin:0 0 10px; font-size:16px}
+    .list{
+      margin:0; padding-left:18px; color:var(--muted); font-size:13px
+    }
+    .list li{margin:8px 0}
+    .pillRow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .pill{
+      font-family: var(--mono);
+      font-size:12px; color:var(--muted);
+      padding:7px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(11,16,32,.35);
+    }
+    .arch{
+      margin-top:12px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      overflow:hidden;
+      background: rgba(11,16,32,.35);
+    }
+    .archHeader{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .archHeader span{color:var(--muted); font-size:12px}
+    .archBody{padding:14px}
+    .svgWrap{width:100%; height:auto}
+    .footer{
+      margin-top:18px; padding:16px; border-radius: var(--radius);
+      border:1px solid var(--line); background: rgba(15,23,51,.35);
+      color: var(--muted); font-size:12px;
+    }
+    .twoCol{
+      display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 920px){ .twoCol{grid-template-columns:1fr} }
+    .kv{
+      display:flex; flex-direction:column; gap:8px;
+      padding:14px; border-radius: var(--radius);
+      border:1px solid var(--line); background: rgba(17,26,59,.45);
+    }
+    .kv .k{font-family:var(--mono); font-size:12px; color:var(--muted)}
+    .kv .v{font-size:13px; color:var(--text)}
+    .small{font-size:12px; color:var(--muted)}
+    .note{
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.16);
+      background: rgba(11,16,32,.22);
+      color: var(--muted);
+      font-size:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>TrustFlow</h1>
+          <p>Trust-minimized workflow coordination on Ethereum</p>
+        </div>
+      </div>
+
+      <nav>
+        <a href="#overview">Overview</a>
+        <a href="#problem">Problem</a>
+        <a href="#solution">Solution</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <section class="hero" id="overview">
+      <div class="panel">
+        <div class="kicker"><span class="dot"></span><span>Protocol / Coordination Layer</span></div>
+        <h2>TrustFlow brings trust-minimized coordination to real-world workflows—powered by Ethereum.</h2>
+        <p class="subtitle">
+          Many real-world processes (multi-party approvals, contractual execution, compliance workflows, inter-organizational collaboration)
+          still rely on centralized platforms or off-chain trust. TrustFlow defines a protocol layer to represent workflows as verifiable state
+          machines and anchor critical transitions on-chain.
+        </p>
+
+        <div class="ctaRow">
+          <a class="btn primary" href="#contact" aria-label="Contact TrustFlow">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 7h10M7 11h10M7 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 7v10a3 3 0 0 1-3 3H8l-5 3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            Get in touch
+          </a>
+
+          <a class="btn" href="#architecture" aria-label="View Architecture">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 7h6v6H5V7Zm8 4h6v6h-6v-6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            See architecture
+          </a>
+
+          <a class="btn" href="https://github.com/tigersaint88-app/TrustFflow" target="_blank" rel="noreferrer" aria-label="Open GitHub repository">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 0 0-3.162 19.49c.5.092.682-.217.682-.483 0-.237-.009-.866-.014-1.7-2.776.603-3.362-1.338-3.362-1.338-.454-1.153-1.11-1.46-1.11-1.46-.908-.62.069-.608.069-.608 1.003.071 1.531 1.03 1.531 1.03.892 1.528 2.341 1.087 2.91.832.091-.647.35-1.087.636-1.337-2.216-.252-4.546-1.108-4.546-4.933 0-1.09.39-1.983 1.03-2.682-.103-.253-.446-1.268.098-2.642 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0 1 12 6.844a9.55 9.55 0 0 1 2.504.337c1.909-1.294 2.748-1.025 2.748-1.025.545 1.374.202 2.389.1 2.642.64.699 1.028 1.592 1.028 2.682 0 3.835-2.334 4.678-4.557 4.925.359.309.679.919.679 1.852 0 1.336-.012 2.415-.012 2.744 0 .268.18.58.688.482A10.002 10.002 0 0 0 12 2Z" fill="currentColor"/></svg>
+            GitHub
+          </a>
+
+          <a class="btn" href="https://trustflow.live" target="_blank" rel="noreferrer" aria-label="Open TrustFlow website">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 14a3.5 3.5 0 0 1 0-5l1.5-1.5a3.5 3.5 0 0 1 5 5L15.5 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 1 0 5L12.5 16.5a3.5 3.5 0 1 1-5-5L8.5 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Website
+          </a>
+        </div>
+
+        <div class="pillRow" aria-label="Key tags">
+          <span class="pill">Ethereum</span>
+          <span class="pill">Smart Contracts</span>
+          <span class="pill">Workflow State Machine</span>
+          <span class="pill">Auditability</span>
+          <span class="pill">Multi-party Coordination</span>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="section">
+          <h3>At a glance</h3>
+
+          <div class="kv">
+            <div class="k">Status</div>
+            <div class="v">
+              Demo available (private preview): a car-rental workflow simulated with three browsers (Passenger, Driver, Platform),
+              demonstrating end-to-end fund movement across event-driven states.
+            </div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Goal</div>
+            <div class="v">A reusable protocol layer to coordinate off-chain workflows with on-chain guarantees.</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Primary chain</div>
+            <div class="v">Ethereum (L1/L2 compatible by design)</div>
+          </div>
+
+          <p class="small" style="margin:10px 2px 0">
+            Legal entity can be incorporated post pre-seed if needed; the project can be operated as a protocol-first initiative.
+          </p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <div class="card" id="problem">
+        <h3>Problem</h3>
+        <p>
+          Critical workflows across organizations still depend on centralized platforms, manual approvals, and opaque audit trails.
+          Smart contracts secure on-chain execution, but do not provide a standard abstraction to represent, validate, and enforce
+          complex off-chain workflow states.
+        </p>
+      </div>
+
+      <div class="card" id="solution">
+        <h3>Solution</h3>
+        <p>
+          TrustFlow models workflows as verifiable state machines and anchors key transitions to Ethereum. This enables trust-minimized
+          coordination across parties—without relying on a single centralized intermediary to enforce rules.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Outcomes</h3>
+        <p>
+          Stronger guarantees for multi-party agreements, improved auditability, and composable primitives that developers can embed into
+          smart contracts and applications.
+        </p>
+      </div>
+    </section>
+
+    <section class="twoCol" id="architecture">
+      <div class="panel">
+        <h3>Architecture (protocol flow)</h3>
+        <ul class="list">
+          <li><strong>Workflow Definition:</strong> define states, transitions, roles, policy rules, and required evidence.</li>
+          <li><strong>Execution & Evidence:</strong> parties execute off-chain steps; artifacts are collected (signatures, logs, documents, API proofs).</li>
+          <li><strong>Attestation & Validation:</strong> validators/participants attest to completion; rules check admissibility and completeness.</li>
+          <li><strong>On-chain Anchoring:</strong> commit critical transitions to Ethereum (hash commitments, signatures, proofs, timestamps).</li>
+          <li><strong>Verification & Audit:</strong> any party can replay/verify workflow integrity against protocol rules.</li>
+          <li><strong>Integration:</strong> smart contracts and apps consume TrustFlow states as composable coordination primitives.</li>
+        </ul>
+
+        <div class="arch" style="margin-top:14px">
+          <div class="archHeader">
+            <strong style="font-size:13px">High-level flow diagram</strong>
+            <span>Protocol flow (overview)</span>
+          </div>
+          <div class="archBody">
+            <!-- Fonts increased across the diagram -->
+            <svg class="svgWrap" viewBox="0 0 980 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TrustFlow protocol flow diagram">
+              <defs>
+                <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="rgba(122,166,255,.60)"/>
+                  <stop offset="1" stop-color="rgba(92,240,199,.40)"/>
+                </linearGradient>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="rgba(0,0,0,.35)"/>
+                </filter>
+              </defs>
+
+              <rect x="12" y="12" width="956" height="396" rx="18" fill="rgba(11,16,32,.22)" stroke="rgba(255,255,255,.10)"/>
+
+              <g filter="url(#shadow)">
+                <rect x="40"  y="70"  width="220" height="86" rx="14" fill="rgba(17,26,59,.55)" stroke="rgba(255,255,255,.12)"/>
+                <rect x="300" y="70"  width="220" height="86" rx="14" fill="rgba(17,26,59,.55)" stroke="rgba(255,255,255,.12)"/>
+                <rect x="560" y="70"  width="220" height="86" rx="14" fill="rgba(17,26,59,.55)" stroke="rgba(255,255,255,.12)"/>
+
+                <rect x="40"  y="205" width="220" height="86" rx="14" fill="rgba(17,26,59,.50)" stroke="rgba(255,255,255,.12)"/>
+                <rect x="300" y="205" width="220" height="86" rx="14" fill="rgba(17,26,59,.50)" stroke="rgba(255,255,255,.12)"/>
+                <rect x="560" y="205" width="220" height="86" rx="14" fill="rgba(17,26,59,.50)" stroke="rgba(255,255,255,.12)"/>
+
+                <rect x="820" y="138" width="120" height="153" rx="16" fill="rgba(17,26,59,.45)" stroke="rgba(255,255,255,.12)"/>
+              </g>
+
+              <!-- Labels (increased font sizes) -->
+              <text x="58"  y="102" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="16">Parties & Systems</text>
+              <text x="58"  y="128" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="14">actors / agents / apps</text>
+
+              <text x="318" y="102" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="16">Workflow Definition</text>
+              <text x="318" y="128" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="14">states • roles • rules</text>
+
+              <text x="578" y="102" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="16">Execution & Evidence</text>
+              <text x="578" y="128" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="14">signatures • logs • proofs</text>
+
+              <text x="58"  y="237" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="16">Attestation</text>
+              <text x="58"  y="263" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="14">multi-party approvals</text>
+
+              <text x="318" y="237" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="16">On-chain Anchoring</text>
+              <text x="318" y="263" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="14">commitments • timestamps</text>
+
+              <text x="578" y="237" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="16">Verification & Audit</text>
+              <text x="578" y="263" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="14">replay • integrity checks</text>
+
+              <text x="835" y="176" fill="rgba(233,237,255,.96)" font-family="system-ui" font-size="15">Integrations</text>
+              <text x="835" y="204" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="13">dApps /</text>
+              <text x="835" y="224" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="13">contracts /</text>
+              <text x="835" y="244" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="13">enterprise</text>
+              <text x="835" y="264" fill="rgba(185,194,255,.92)" font-family="ui-monospace" font-size="13">systems</text>
+
+              <!-- arrows -->
+              <g stroke="url(#g1)" stroke-width="3" fill="none">
+                <path d="M260 113 C 275 113, 285 113, 300 113"/>
+                <path d="M520 113 C 535 113, 545 113, 560 113"/>
+                <path d="M670 156 C 670 178, 670 193, 670 205"/>
+                <path d="M260 248 C 275 248, 285 248, 300 248"/>
+                <path d="M520 248 C 535 248, 545 248, 560 248"/>
+                <path d="M780 248 C 800 248, 810 248, 820 248"/>
+                <path d="M780 113 C 805 113, 815 123, 820 142"/>
+              </g>
+
+              <g fill="rgba(92,240,199,.9)">
+                <circle cx="300" cy="113" r="4"/>
+                <circle cx="560" cy="113" r="4"/>
+                <circle cx="670" cy="205" r="4"/>
+                <circle cx="300" cy="248" r="4"/>
+                <circle cx="560" cy="248" r="4"/>
+                <circle cx="820" cy="248" r="4"/>
+                <circle cx="820" cy="142" r="4"/>
+              </g>
+
+              <text x="40" y="46" fill="rgba(185,194,255,.90)" font-family="ui-monospace" font-size="14">
+                TrustFlow protocol flow — from real-world execution to Ethereum-backed verification
+              </text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>What makes TrustFlow different</h3>
+        <ul class="list">
+          <li><strong>Coordination-first:</strong> focuses on multi-party workflow integrity rather than single-app logic.</li>
+          <li><strong>Trust-minimized:</strong> enforces critical transitions with on-chain commitments and verifiable evidence.</li>
+          <li><strong>Composable primitives:</strong> developers integrate standardized workflow trust objects into smart contracts.</li>
+          <li><strong>Audit-ready:</strong> designed for traceability, replayability, and compliance verification.</li>
+          <li><strong>Demo-driven validation:</strong> a car-rental simulation demonstrates end-to-end fund movement across event states.</li>
+        </ul>
+		<div class="section">
+		  <h3>Demo validation</h3>
+		  <ul class="list">
+			<li>
+			  <strong>Normal flow:</strong> car rental completed without dispute; deposits and payments settle automatically
+			  according to predefined workflow states.
+			</li>
+			<li>
+			  <strong>Dispute flow:</strong> dispute raised during execution; protocol enforces state transition,
+			  fund freezing, and resolution rules across involved parties.
+			</li>
+			<li>
+			  <strong>Setup:</strong> three independent browsers simulate Passenger, Driver, and Platform roles.
+			</li>
+		  </ul>
+		</div>
+        <div class="section">
+          <h3>Demo scenario (car rental)</h3>
+          <ul class="list">
+            <li><strong>Three-browser simulation:</strong> Passenger, Driver, and Platform each operate in separate browsers.</li>
+            <li><strong>Event-state machine:</strong> booking → deposit → pickup → ride → completion → settlement/refund.</li>
+            <li><strong>Funds flow:</strong> visible movement of deposits and payments across states, with platform/driver/passenger outcomes.</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h3>Potential use cases</h3>
+          <ul class="list">
+            <li>Multi-party contractual execution (escrow, deposits, milestones)</li>
+            <li>Compliance workflows and attestations</li>
+            <li>Inter-org approvals and governance processes</li>
+            <li>Cross-system coordination for enterprise + Web3 integration</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="twoCol" id="roadmap">
+      <div class="panel">
+        <h3>Roadmap (indicative)</h3>
+        <ul class="list">
+          <li><strong>Phase 1 (MVP):</strong> minimal workflow state machine, on-chain anchoring, reference spec, and sample integrations.</li>
+          <li><strong>Phase 2:</strong> developer SDK, templates for common workflows, improved evidence/attestation model.</li>
+          <li><strong>Phase 3:</strong> security review, ecosystem pilots, and broader composability with Ethereum tooling.</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Links & evidence</h3>
+        <ul class="list">
+          <li><strong>Website:</strong> <a href="https://trustflow.live" target="_blank" rel="noreferrer">https://trustflow.live</a></li>
+          <li><strong>GitHub:</strong> <a href="https://github.com/tigersaint88-app/TrustFflow" target="_blank" rel="noreferrer">github.com/tigersaint88-app/TrustFflow</a></li>
+          <li>
+			  <strong>Demo videos (GitHub Release):</strong>
+			  <ul>
+				<li>
+				  <a href="https://github.com/tigersaint88-app/TrustFflow/releases/download/v0.1-demo/trustflowOrderNoDispute.mp4"
+					 target="_blank" rel="noreferrer">
+					▶ Normal Flow — Car Rental (No Dispute)
+				  </a>
+				  <span class="small">
+					&nbsp;— three-browser simulation (Passenger / Driver / Platform), normal settlement
+				  </span>
+				</li>
+				<li>
+				  <a href="https://github.com/tigersaint88-app/TrustFflow/releases/download/v0.1-demo/trustflowOrderWithDispute.mp4"
+					 target="_blank" rel="noreferrer">
+					⚠ Dispute Flow — Car Rental (With Dispute)
+				  </a>
+				  <span class="small">
+					&nbsp;— dispute triggered, state transition and fund handling enforced by protocol
+				  </span>
+				</li>
+			  </ul>
+			</li>
+
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel" id="contact">
+      <h3>Contact</h3>
+      <p class="subtitle" style="margin-top:6px">
+        For demos, grants, or partnership discussions, please reach out using the contact methods below.
+      </p>
+
+      <div class="twoCol">
+        <div class="kv">
+          <div class="k">Email</div>
+          <div class="v"><a href="mailto:tiger.saint88@gmail.com">tiger.saint88@gmail.com</a></div>
+        </div>
+        <div class="kv">
+          <div class="k">Website</div>
+          <div class="v"><a href="https://trustflow.live" target="_blank" rel="noreferrer">https://trustflow.live</a></div>
+        </div>
+      </div>
+
+      <div class="twoCol">
+        <div class="kv">
+          <div class="k">GitHub</div>
+          <div class="v"><a href="https://github.com/tigersaint88-app/TrustFflow" target="_blank" rel="noreferrer">github.com/tigersaint88-app/TrustFflow</a></div>
+        </div>
+        <div class="kv">
+          <div class="k">Demo</div>
+          <div class="v">
+			  Two demo videos:
+			  <ul>
+				<li>Normal order flow without dispute</li>
+				<li>Order flow with dispute, demonstrating enforced state transitions and fund handling</li>
+			  </ul>
+			</div>
+
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div><strong>Note for grant submissions:</strong> This page is designed to be a stable, reviewer-friendly project overview (not marketing).</div>
+      <div style="margin-top:6px">© <span id="y"></span> TrustFlow. All information is subject to iteration as the protocol evolves.</div>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
