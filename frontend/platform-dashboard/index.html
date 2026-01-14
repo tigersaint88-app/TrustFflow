@@ -1,0 +1,3918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">平台收入流水</title>
+    <script src="ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* SaaS Professional Color Palette */
+            --primary-color: #635bff;
+            --primary-dark: #4a42d4;
+            --secondary-color: #0a2540;
+            --success-color: #00d4aa;
+            --error-color: #e25950;
+            --warning-color: #ffb020;
+            --info-color: #3b82f6;
+            
+            /* Neutral Colors */
+            --gray-50: #fafbfc;
+            --gray-100: #f6f8fa;
+            --gray-200: #e1e4e8;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Background Colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #fafbfc;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-focus: 0 0 0 3px rgba(99, 91, 255, 0.1);
+            
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+            
+            /* Typography */
+            --font-size-xs: 12px;
+            --font-size-sm: 14px;
+            --font-size-base: 16px;
+            --font-size-lg: 18px;
+            --font-size-xl: 20px;
+            --font-size-2xl: 24px;
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-secondary);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--gray-900);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--bg-primary);
+            color: var(--gray-900);
+            padding: var(--spacing-xl) var(--spacing-lg);
+            border-bottom: 1px solid var(--gray-200);
+            text-align: left;
+        }
+
+        .header h1 {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--spacing-xs);
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .header .subtitle {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            font-weight: 400;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--spacing-md);
+            padding: var(--spacing-md) var(--spacing-md);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-value.usd {
+            font-size: 12px;
+            color: var(--gray-500);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .content {
+            padding: var(--spacing-xl) var(--spacing-lg);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        input[type="date"], input[type="text"], select {
+            padding: 10px 14px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            transition: var(--transition);
+            background: var(--bg-primary);
+            color: var(--gray-900);
+        }
+
+        input[type="date"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-focus);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-600);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-700);
+            box-shadow: var(--shadow-md);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .revenue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 争议订单列表样式 - 参考收入信息的 card 模式 */
+        .dispute-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .dispute-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            transition: var(--transition);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .dispute-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .dispute-item.dispute-open {
+            border-left: 4px solid #ef4444;
+        }
+
+        .dispute-item.dispute-resolved {
+            border-left: 4px solid #10b981;
+        }
+
+        .dispute-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .dispute-order-id {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .dispute-status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dispute-status-badge.open {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .dispute-status-badge.resolved {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .dispute-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .dispute-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dispute-info-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dispute-info-value {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .dispute-info-value.address {
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            cursor: pointer;
+            color: #667eea;
+        }
+
+        .dispute-info-value.address:hover {
+            text-decoration: underline;
+        }
+
+        .dispute-reason {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .dispute-reason-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .dispute-reason-text {
+            font-size: 14px;
+            color: #1f2937;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .revenue-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            transition: var(--transition);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .revenue-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .revenue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .revenue-date {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .revenue-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .revenue-amount.usd {
+            font-size: 11px;
+            color: var(--gray-500);
+            font-weight: 400;
+            margin-left: var(--spacing-xs);
+        }
+
+        .revenue-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 12px;
+            color: #1f2937;
+            font-weight: 600;
+            word-break: break-all;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        }
+
+        .detail-value.address {
+            cursor: pointer;
+            color: #667eea;
+        }
+
+        .detail-value.address:hover {
+            text-decoration: underline;
+        }
+
+        .btn-details {
+            padding: 6px 12px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-details:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-details.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Tab Control Styles - 参照 user 端和接受端 */
+        .filter-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            padding: 0 16px;
+            border-bottom: 2px solid #e5e7eb;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        
+        .filter-tabs::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .filter-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .filter-tabs::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .filter-tabs::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .filter-tab {
+            padding: 12px 20px;
+            border: none !important;
+            background: transparent !important;
+            color: #6b7280;
+            border-radius: 0 !important;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            position: relative;
+            margin-bottom: -2px;
+            outline: none !important;
+            box-shadow: none !important;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: auto !important;
+            margin-top: 0 !important;
+        }
+        
+        .filter-tab:hover {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05) !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        .filter-tab:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        .filter-tab.active {
+            background: transparent !important;
+            border: none !important;
+            color: #3b82f6 !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        
+        .filter-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #3b82f6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+        }
+
+        .modal-header {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        }
+
+        .modal-header h2 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .transaction-detail {
+            display: grid;
+            gap: 20px;
+        }
+
+        .detail-section {
+            padding: var(--spacing-lg);
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .detail-section h3 {
+            font-size: var(--font-size-base);
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-md);
+            font-weight: 600;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+        }
+
+        .detail-row-value {
+            color: var(--gray-900);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-all;
+        }
+        
+        /* Admin Dispute Panel */
+        .admin-dispute-panel {
+            border: 1px solid #bbb;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            background: #fff7f7;
+        }
+        
+        .admin-dispute-panel h3 {
+            margin-bottom: 16px;
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .admin-dispute-panel label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .admin-dispute-panel input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .admin-dispute-panel button {
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .admin-dispute-panel button:hover:not(:disabled) {
+            background: #2563eb;
+        }
+        
+        .admin-dispute-panel button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #d1d5db;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .wallet-connect-section {
+            padding: var(--spacing-2xl) var(--spacing-lg);
+            text-align: center;
+            background: var(--bg-secondary);
+        }
+
+        .wallet-connect-section h2 {
+            margin-bottom: var(--spacing-md);
+            color: var(--gray-900);
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+        }
+
+        .wallet-connect-section p {
+            color: var(--gray-600);
+            margin-bottom: var(--spacing-lg);
+            font-size: var(--font-size-base);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="header-title">💰 平台收入流水</h1>
+        </div>
+
+        <div id="wallet-section" class="wallet-connect-section" style="display: none;">
+            <h2 id="wallet-connect-title">连接钱包</h2>
+            <p id="wallet-connect-desc">请连接钱包以查看平台收入流水</p>
+            <button class="btn btn-primary" onclick="connectWallet()" id="wallet-connect-btn">连接钱包</button>
+        </div>
+
+        <div id="dashboard-content" style="display: none;">
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-label">平台钱包地址</div>
+                    <div class="stat-value" style="font-size: 11px; font-family: monospace;" id="platform-wallet-address">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">总收入 (ETH)</div>
+                    <div class="stat-value" id="total-revenue-eth">0.00</div>
+                    <div class="stat-value usd" id="total-revenue-usd">$0.00 USD</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">交易总数</div>
+                    <div class="stat-value" id="total-transactions">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平台钱包余额</div>
+                    <div class="stat-value" id="current-balance">0.00</div>
+                    <div class="stat-value usd" id="current-balance-usd">$0.00 USD</div>
+                </div>
+            </div>
+
+            <!-- 订单状态监控 -->
+            <div class="stats-bar" style="margin-top: 12px;">
+                <div class="stat-card">
+                    <div class="stat-label">当日总订单数</div>
+                    <div class="stat-value" id="today-total-orders">0</div>
+                    <div class="stat-value usd" id="today-total-amount">0.00 ETH</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">正在执行</div>
+                    <div class="stat-value" id="active-orders-count">0</div>
+                    <div class="stat-value usd" id="active-orders-amount">0.00 ETH (0%)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">争议订单</div>
+                    <div class="stat-value" id="dispute-orders-count">0</div>
+                    <div class="stat-value usd" id="dispute-orders-amount">0.00 ETH (0%)</div>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Main Tabs -->
+                <div class="filter-tabs">
+                    <button class="filter-tab active" id="main-tab-revenue" onclick="switchMainTab('revenue')">
+                        💰 收入信息
+                    </button>
+                    <button class="filter-tab" id="main-tab-disputes" onclick="switchMainTab('disputes')">
+                        ⚖️ 争议订单
+                    </button>
+                    <button class="filter-tab" id="main-tab-active" onclick="switchMainTab('active')">
+                        🚀 当前活跃订单
+                    </button>
+                </div>
+
+                <!-- Revenue Tab Content -->
+                <div id="tab-content-revenue" class="tab-content" style="display: block;">
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>起始日期:</label>
+                            <input type="date" id="start-date">
+                        </div>
+                        <div class="filter-group">
+                            <label>结束日期:</label>
+                            <input type="date" id="end-date">
+                        </div>
+                        <div class="filter-group">
+                            <label>搜索:</label>
+                            <input type="text" id="search-input" placeholder="订单ID、交易哈希、司机地址...">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadRevenueData()">刷新数据</button>
+                        <button class="btn btn-secondary" onclick="exportData()">导出数据</button>
+                    </div>
+                    
+                    <div class="status-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; padding: 0 16px;">
+                        <button class="status-tab active" id="status-tab-all" onclick="filterByStatus('all')" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                            全部
+                        </button>
+                        <button class="status-tab" id="status-tab-completed" onclick="filterByStatus('completed')" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: #f9fafb; color: #6b7280; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                            已完成
+                        </button>
+                        <button class="status-tab" id="status-tab-settled" onclick="filterByStatus('settled')" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: #f9fafb; color: #6b7280; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                            已结算
+                        </button>
+                    </div>
+
+                    <div id="loading-revenue" class="loading">正在加载平台收入数据</div>
+                    <div id="revenue-list" class="revenue-list" style="display: none;"></div>
+                    <div id="empty-state-revenue" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">📭</div>
+                        <div>暂无收入记录</div>
+                    </div>
+                </div>
+
+                <!-- Disputes Tab Content -->
+                <div id="tab-content-disputes" class="tab-content" style="display: none;">
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>状态:</label>
+                            <select id="dispute-status-filter" onchange="loadDisputes()">
+                                <option value="all">全部</option>
+                                <option value="open">待处理</option>
+                                <option value="resolved">已解决</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadDisputes()">刷新数据</button>
+                    </div>
+
+                    <div id="loading-disputes" class="loading">正在加载争议订单</div>
+                    <div id="dispute-list" class="dispute-list" style="display: none;"></div>
+                    <div id="empty-state-disputes" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">⚖️</div>
+                        <div>暂无争议订单</div>
+                    </div>
+                </div>
+
+                <!-- Active Orders Tab Content -->
+                <div id="tab-content-active" class="tab-content" style="display: none;">
+                    <div class="filter-bar">
+                        <button class="btn btn-primary" onclick="loadActiveOrders()">刷新数据</button>
+                    </div>
+
+                    <div id="loading-active" class="loading">正在加载活跃订单</div>
+                    <div id="active-orders-list" class="revenue-list" style="display: none;"></div>
+                    <div id="empty-state-active" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">📋</div>
+                        <div>暂无活跃订单</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交易详情模态框 -->
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>交易详情</h2>
+                <button class="modal-close" onclick="closeDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- 详情内容将在这里动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 语言检测和翻译
+        function getCurrentLang() {
+            // 从localStorage获取语言设置，如果没有则从浏览器语言检测
+            const savedLang = localStorage.getItem('platform_lang');
+            if (savedLang) return savedLang;
+            
+            const browserLang = navigator.language || navigator.userLanguage;
+            return browserLang.startsWith('zh') ? 'zh' : 'en';
+        }
+        
+        function t(key, zhText, enText) {
+            const lang = getCurrentLang();
+            return lang === 'zh' ? zhText : enText;
+        }
+        
+        const isZh = getCurrentLang() === 'zh';
+        
+        // 全局变量
+        let provider, signer, account;
+        let contracts = {};
+        let revenueData = [];
+        const ETH_TO_USD_RATE = 2500; // 汇率
+
+        // 初始化文本（根据语言）
+        function initTexts() {
+            const lang = getCurrentLang();
+            const texts = {
+                zh: {
+                    pageTitle: '平台收入流水',
+                    headerTitle: '💰 平台收入流水',
+                    walletConnectTitle: '连接钱包',
+                    walletConnectDesc: '请连接钱包以查看平台收入流水',
+                    walletConnectBtn: '连接钱包',
+                    platformWalletAddress: '平台钱包地址',
+                    totalRevenue: '总收入 (ETH)',
+                    totalTransactions: '交易总数',
+                    platformBalance: '平台钱包余额',
+                    todayTotalOrders: '当日总订单数',
+                    activeOrders: '正在执行',
+                    disputeOrders: '争议订单',
+                    revenueInfo: '💰 收入信息',
+                    disputes: '⚖️ 争议订单',
+                    activeOrdersTab: '🚀 当前活跃订单',
+                    startDate: '起始日期:',
+                    endDate: '结束日期:',
+                    search: '搜索:',
+                    searchPlaceholder: '订单ID、交易哈希、司机地址...',
+                    refreshData: '刷新数据',
+                    exportData: '导出数据',
+                    all: '全部',
+                    completed: '已完成',
+                    settled: '已结算',
+                    loadingRevenue: '正在加载平台收入数据',
+                    noRevenueRecords: '暂无收入记录',
+                    status: '状态:',
+                    allStatus: '全部',
+                    openStatus: '待处理',
+                    resolvedStatus: '已解决',
+                    loadingDisputes: '正在加载争议订单',
+                    noDisputes: '暂无争议订单',
+                    loadingActive: '正在加载活跃订单',
+                    noActiveOrders: '暂无活跃订单',
+                    transactionDetails: '交易详情',
+                    winner: '获胜方',
+                    resolutionDetail: '裁决说明',
+                    openedAt: '提交时间',
+                    resolvedAt: '解决时间',
+                    noDispute: '无争议',
+                    resolveForDriver: '司机获胜',
+                    resolveForPassenger: '乘客获胜',
+                    winnerWalletAddress: '获胜方钱包地址',
+                    processing: '处理中...',
+                    disputeResolvedDriver: '争议已解决（司机获胜）',
+                    disputeResolvedPassenger: '争议已解决（乘客获胜）',
+                    confirmResolveDriver: '确认将争议解决为司机获胜？',
+                    confirmResolvePassenger: '确认将争议解决为乘客获胜？',
+                    driverAddress: '司机地址',
+                    passengerAddress: '乘客地址',
+                    description: '说明',
+                    clickToCopy: '点击复制',
+                    openedBy: '发起人',
+                    orderStatus: '订单状态',
+                    txHash: '交易哈希',
+                    disputeReason: '争议原因',
+                    resolved: '已解决',
+                    open: '待处理',
+                    details: '详情',
+                    notSet: '未设置',
+                    order: '订单',
+                    accepted: '已接单',
+                    inProgress: '进行中',
+                    awaitingSettlement: '等待结算',
+                    status: '状态',
+                    passenger: '乘客',
+                    driver: '司机',
+                    pickupLocation: '上车地点',
+                    destination: '目的地',
+                    basicInfo: '基本信息',
+                    amountDetails: '金额明细',
+                    participants: '参与方',
+                    orderInfo: '订单信息',
+                    orderHistory: '订单历史状态',
+                    disputeInfo: '争议信息',
+                    orderId: '订单ID',
+                    transactionTime: '交易时间',
+                    blockNumber: '区块号',
+                    transactionHash: '交易哈希',
+                    orderAmount: '订单总额',
+                    platformFee: '平台费 (5%)',
+                    driverEarnings: '司机收入 (95%)',
+                    driverSide: '接单端（司机）',
+                    passengerSide: '发单端（乘客）',
+                    platformWallet: '平台钱包',
+                    orderCategory: '订单类别',
+                    subCategory: '子类别',
+                    disputeStatus: '争议状态',
+                    resolvedStatus: '已解决',
+                    pendingStatus: '待处理',
+                    noDisputeStatus: '无争议',
+                    openedBy: '发起人',
+                    disputeReason: '争议原因',
+                    disputeOpenedAt: '争议发起时间',
+                    winner: '获胜方',
+                    resolvedAt: '解决时间',
+                    resolutionDetail: '裁决说明',
+                    driverLabel: '司机',
+                    reasonLabel: '原因',
+                    winnerLabel: '获胜方',
+                    blockLabel: '区块',
+                    enterSolutionNote: '输入解决方案说明...',
+                    copy: '复制'
+                },
+                en: {
+                    pageTitle: 'Platform Revenue Dashboard',
+                    headerTitle: '💰 Platform Revenue Dashboard',
+                    walletConnectTitle: 'Connect Wallet',
+                    walletConnectDesc: 'Please connect your wallet to view platform revenue',
+                    walletConnectBtn: 'Connect Wallet',
+                    platformWalletAddress: 'Platform Wallet Address',
+                    totalRevenue: 'Total Revenue (ETH)',
+                    totalTransactions: 'Total Transactions',
+                    platformBalance: 'Platform Balance',
+                    todayTotalOrders: 'Today\'s Total Orders',
+                    activeOrders: 'Active Orders',
+                    disputeOrders: 'Dispute Orders',
+                    revenueInfo: '💰 Revenue Info',
+                    disputes: '⚖️ Disputes',
+                    activeOrdersTab: '🚀 Active Orders',
+                    startDate: 'Start Date:',
+                    endDate: 'End Date:',
+                    search: 'Search:',
+                    searchPlaceholder: 'Order ID, Transaction Hash, Driver Address...',
+                    refreshData: 'Refresh Data',
+                    exportData: 'Export Data',
+                    all: 'All',
+                    completed: 'Completed',
+                    settled: 'Settled',
+                    loadingRevenue: 'Loading platform revenue data',
+                    noRevenueRecords: 'No revenue records',
+                    status: 'Status:',
+                    allStatus: 'All',
+                    openStatus: 'Open',
+                    resolvedStatus: 'Resolved',
+                    loadingDisputes: 'Loading dispute orders',
+                    noDisputes: 'No dispute orders',
+                    loadingActive: 'Loading active orders',
+                    noActiveOrders: 'No active orders',
+                    transactionDetails: 'Transaction Details',
+                    winner: 'Winner',
+                    resolutionDetail: 'Resolution Detail',
+                    openedAt: 'Opened At',
+                    resolvedAt: 'Resolved At',
+                    noDispute: 'No Dispute',
+                    resolveForDriver: 'Resolve for Driver',
+                    resolveForPassenger: 'Resolve for Passenger',
+                    winnerWalletAddress: 'Winner Wallet Address',
+                    processing: 'Processing...',
+                    disputeResolvedDriver: 'Dispute resolved (Driver wins)',
+                    disputeResolvedPassenger: 'Dispute resolved (Passenger wins)',
+                    confirmResolveDriver: 'Confirm resolve dispute for driver?',
+                    confirmResolvePassenger: 'Confirm resolve dispute for passenger?',
+                    driverAddress: 'Driver Address',
+                    passengerAddress: 'Passenger Address',
+                    description: 'Description',
+                    clickToCopy: 'Click to copy',
+                    openedBy: 'Opened By',
+                    orderStatus: 'Order Status',
+                    txHash: 'TX Hash',
+                    disputeReason: 'Dispute Reason',
+                    resolved: 'Resolved',
+                    open: 'Open',
+                    details: 'Details',
+                    notSet: 'Not Set',
+                    order: 'Order',
+                    accepted: 'Accepted',
+                    inProgress: 'In Progress',
+                    awaitingSettlement: 'Awaiting Settlement',
+                    status: 'Status',
+                    passenger: 'Passenger',
+                    driver: 'Driver',
+                    pickupLocation: 'Pickup Location',
+                    destination: 'Destination',
+                    basicInfo: 'Basic Info',
+                    amountDetails: 'Amount Details',
+                    participants: 'Participants',
+                    orderInfo: 'Order Info',
+                    orderHistory: 'Order History',
+                    disputeInfo: 'Dispute Info',
+                    orderId: 'Order ID',
+                    transactionTime: 'Transaction Time',
+                    blockNumber: 'Block Number',
+                    transactionHash: 'Transaction Hash',
+                    orderAmount: 'Order Amount',
+                    platformFee: 'Platform Fee (5%)',
+                    driverEarnings: 'Driver Earnings (95%)',
+                    driverSide: 'Driver Side',
+                    passengerSide: 'Passenger Side',
+                    platformWallet: 'Platform Wallet',
+                    orderCategory: 'Order Category',
+                    subCategory: 'Sub Category',
+                    disputeStatus: 'Dispute Status',
+                    resolvedStatus: 'Resolved',
+                    pendingStatus: 'Pending',
+                    noDisputeStatus: 'No Dispute',
+                    openedBy: 'Opened By',
+                    disputeReason: 'Dispute Reason',
+                    disputeOpenedAt: 'Dispute Opened At',
+                    winner: 'Winner',
+                    resolvedAt: 'Resolved At',
+                    resolutionDetail: 'Resolution Detail',
+                    driverLabel: 'Driver',
+                    reasonLabel: 'Reason',
+                    winnerLabel: 'Winner',
+                    blockLabel: 'Block',
+                    enterSolutionNote: 'Enter solution note...',
+                    copy: 'Copy'
+                }
+            };
+            
+            const t = texts[lang];
+            
+            // 更新静态文本
+            const titleEl = document.getElementById('page-title');
+            if (titleEl) titleEl.textContent = t.pageTitle;
+            
+            const headerTitleEl = document.getElementById('header-title');
+            if (headerTitleEl) headerTitleEl.textContent = t.headerTitle;
+            
+            const walletTitleEl = document.getElementById('wallet-connect-title');
+            if (walletTitleEl) walletTitleEl.textContent = t.walletConnectTitle;
+            
+            const walletDescEl = document.getElementById('wallet-connect-desc');
+            if (walletDescEl) walletDescEl.textContent = t.walletConnectDesc;
+            
+            const walletBtnEl = document.getElementById('wallet-connect-btn');
+            if (walletBtnEl) walletBtnEl.textContent = t.walletConnectBtn;
+            
+            // 更新统计标签
+            const statLabels = document.querySelectorAll('.stat-label');
+            statLabels.forEach(label => {
+                const text = label.textContent.trim();
+                if (text === '平台钱包地址' || text === 'Platform Wallet Address') {
+                    label.textContent = t.platformWalletAddress;
+                } else if (text === '总收入 (ETH)' || text === 'Total Revenue (ETH)') {
+                    label.textContent = t.totalRevenue;
+                } else if (text === '交易总数' || text === 'Total Transactions') {
+                    label.textContent = t.totalTransactions;
+                } else if (text === '平台钱包余额' || text === 'Platform Balance') {
+                    label.textContent = t.platformBalance;
+                } else if (text === '当日总订单数' || text === 'Today\'s Total Orders') {
+                    label.textContent = t.todayTotalOrders;
+                } else if (text === '正在执行' || text === 'Active Orders') {
+                    label.textContent = t.activeOrders;
+                } else if (text === '争议订单' || text === 'Dispute Orders') {
+                    label.textContent = t.disputeOrders;
+                }
+            });
+            
+            // 更新Tab按钮
+            const revenueTab = document.getElementById('main-tab-revenue');
+            if (revenueTab) revenueTab.textContent = t.revenueInfo;
+            
+            const disputesTab = document.getElementById('main-tab-disputes');
+            if (disputesTab) disputesTab.textContent = t.disputes;
+            
+            const activeTab = document.getElementById('main-tab-active');
+            if (activeTab) activeTab.textContent = t.activeOrdersTab;
+            
+            // 更新表单标签
+            const labels = document.querySelectorAll('label');
+            labels.forEach(label => {
+                const text = label.textContent.trim();
+                if (text.startsWith('起始日期') || text.startsWith('Start Date')) {
+                    label.textContent = t.startDate;
+                } else if (text.startsWith('结束日期') || text.startsWith('End Date')) {
+                    label.textContent = t.endDate;
+                } else if (text.startsWith('搜索') || text.startsWith('Search')) {
+                    label.textContent = t.search;
+                } else if (text.startsWith('状态') || text.startsWith('Status')) {
+                    label.textContent = t.status;
+                }
+            });
+            
+            // 更新搜索框placeholder
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.placeholder = t.searchPlaceholder;
+            }
+            
+            // 更新按钮文本
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                const text = btn.textContent.trim();
+                if (text === '刷新数据' || text === 'Refresh Data') {
+                    btn.textContent = t.refreshData;
+                } else if (text === '导出数据' || text === 'Export Data') {
+                    btn.textContent = t.exportData;
+                }
+            });
+            
+            // 更新状态Tab
+            const statusTabs = document.querySelectorAll('.status-tab');
+            statusTabs.forEach(tab => {
+                const text = tab.textContent.trim();
+                if (text === '全部' || text === 'All') {
+                    tab.textContent = t.all;
+                } else if (text === '已完成' || text === 'Completed') {
+                    tab.textContent = t.completed;
+                } else if (text === '已结算' || text === 'Settled') {
+                    tab.textContent = t.settled;
+                }
+            });
+            
+            // 更新下拉选项
+            const disputeFilter = document.getElementById('dispute-status-filter');
+            if (disputeFilter) {
+                const options = disputeFilter.querySelectorAll('option');
+                options.forEach(opt => {
+                    const val = opt.value;
+                    if (val === 'all') opt.textContent = t.allStatus;
+                    else if (val === 'open') opt.textContent = t.openStatus;
+                    else if (val === 'resolved') opt.textContent = t.resolvedStatus;
+                });
+            }
+            
+            // 更新加载和空状态文本
+            const loadingRevenue = document.getElementById('loading-revenue');
+            if (loadingRevenue) loadingRevenue.textContent = t.loadingRevenue;
+            
+            const emptyRevenue = document.querySelector('#empty-state-revenue div:last-child');
+            if (emptyRevenue) emptyRevenue.textContent = t.noRevenueRecords;
+            
+            const loadingDisputes = document.getElementById('loading-disputes');
+            if (loadingDisputes) loadingDisputes.textContent = t.loadingDisputes;
+            
+            const emptyDisputes = document.querySelector('#empty-state-disputes div:last-child');
+            if (emptyDisputes) emptyDisputes.textContent = t.noDisputes;
+            
+            const loadingActive = document.getElementById('loading-active');
+            if (loadingActive) loadingActive.textContent = t.loadingActive;
+            
+            const emptyActive = document.querySelector('#empty-state-active div:last-child');
+            if (emptyActive) emptyActive.textContent = t.noActiveOrders;
+            
+            // 更新模态框标题
+            const modalTitle = document.getElementById('modal-title');
+            if (modalTitle) modalTitle.textContent = t.transactionDetails;
+            
+            // 保存翻译对象到全局
+            window.platformTexts = t;
+        }
+        
+        // 初始化
+        window.addEventListener('load', async () => {
+            initTexts();
+            if (typeof window.ethereum !== 'undefined') {
+                await connectWallet();
+            } else {
+                document.getElementById('wallet-section').style.display = 'block';
+            }
+        });
+
+        // 连接钱包
+        async function connectWallet() {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                account = await signer.getAddress();
+                console.log('连接的账户地址:', account);
+
+                // 检查网络
+                const network = await provider.getNetwork();
+                console.log('当前网络信息:', {
+                    chainId: network.chainId.toString(),
+                    name: network.name
+                });
+                
+                // 检查 Chain ID 是否为 1337 (本地 Hardhat 网络)
+                const EXPECTED_CHAIN_ID = 1337;
+                // 将 chainId 转换为数字进行比较（可能是 BigNumber 或字符串）
+                const currentChainId = typeof network.chainId === 'object' 
+                    ? network.chainId.toNumber() 
+                    : parseInt(network.chainId.toString(), 10);
+                
+                console.log('网络检查:', {
+                    chainId原始值: network.chainId,
+                    chainId类型: typeof network.chainId,
+                    chainId数字: currentChainId,
+                    期望值: EXPECTED_CHAIN_ID,
+                    匹配: currentChainId === EXPECTED_CHAIN_ID
+                });
+                
+                if (currentChainId !== EXPECTED_CHAIN_ID) {
+                    console.warn(`⚠️ 警告: 当前 Chain ID 是 ${currentChainId}，但应该是 ${EXPECTED_CHAIN_ID}`);
+                    console.warn('请确保 MetaMask 连接到本地 Hardhat 网络 (localhost:8545)');
+                    
+                    // 显示错误信息，阻止继续执行
+                    const errorMsg = `⚠️ 网络不匹配！\n\n` +
+                        `当前 Chain ID: ${currentChainId} (${network.name || 'Unknown'})\n` +
+                        `期望 Chain ID: ${EXPECTED_CHAIN_ID} (Hardhat Local)\n\n` +
+                        `请切换到本地 Hardhat 网络后再继续。\n\n` +
+                        `是否要自动切换到本地 Hardhat 网络？\n\n` +
+                        `点击"确定"自动添加并切换网络\n` +
+                        `点击"取消"手动在 MetaMask 中配置`;
+                    
+                    const userWantsToSwitch = confirm(errorMsg);
+                    
+                    if (userWantsToSwitch) {
+                        try {
+                            // 显示加载提示
+                            const loadingMsg = document.createElement('div');
+                            loadingMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;text-align:center;';
+                            loadingMsg.innerHTML = '<div>正在切换网络...</div><div style="margin-top:10px;font-size:12px;color:#666;">请等待 MetaMask 完成网络切换（可能需要 2-5 秒）</div>';
+                            document.body.appendChild(loadingMsg);
+                            
+                            // 监听网络变化事件
+                            const handleChainChanged = (chainId) => {
+                                console.log('网络已切换，新的 Chain ID:', parseInt(chainId, 16));
+                                document.body.removeChild(loadingMsg);
+                                window.ethereum.removeListener('chainChanged', handleChainChanged);
+                                
+                                // 等待一小段时间确保网络状态更新
+                                setTimeout(() => {
+                                    console.log('✅ 网络切换完成，重新加载页面');
+                                    location.reload();
+                                }, 1000);
+                            };
+                            window.ethereum.on('chainChanged', handleChainChanged);
+                            
+                            // 先尝试切换到本地网络（如果已存在）
+                            try {
+                                await window.ethereum.request({
+                                    method: 'wallet_switchEthereumChain',
+                                    params: [{ chainId: '0x539' }] // 1337 的十六进制
+                                });
+                                console.log('✅ 已请求切换到本地网络，等待确认...');
+                                // 不立即重新加载，等待 chainChanged 事件
+                                return; // 阻止继续执行
+                            } catch (switchError) {
+                                if (switchError.code === 4902) {
+                                    // 网络不存在，需要添加
+                                    console.log('➕ 本地网络不存在，正在添加...');
+                                    loadingMsg.innerHTML = '<div>正在添加本地网络...</div><div style="margin-top:10px;font-size:12px;color:#666;">请等待 MetaMask 完成网络添加（可能需要 2-5 秒）</div>';
+                                } else {
+                                    document.body.removeChild(loadingMsg);
+                                    window.ethereum.removeListener('chainChanged', handleChainChanged);
+                                    throw switchError; // 其他错误，重新抛出
+                                }
+                            }
+                            
+                            // 添加网络
+                            try {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x539', // 1337 的十六进制
+                                        chainName: 'Hardhat Local',
+                                        nativeCurrency: {
+                                            name: 'Ethereum',
+                                            symbol: 'ETH',
+                                            decimals: 18
+                                        },
+                                        rpcUrls: ['http://127.0.0.1:8545', 'http://localhost:8545'],
+                                        blockExplorerUrls: null
+                                    }]
+                                });
+                                console.log('✅ 本地网络已添加并切换，等待网络状态更新...');
+                                // 不立即重新加载，等待 chainChanged 事件或超时
+                                setTimeout(() => {
+                                    const currentChainId = window.ethereum.chainId;
+                                    const chainIdNum = parseInt(currentChainId, 16);
+                                    if (chainIdNum === 1337) {
+                                        document.body.removeChild(loadingMsg);
+                                        window.ethereum.removeListener('chainChanged', handleChainChanged);
+                                        console.log('✅ 网络切换完成，重新加载页面');
+                                        location.reload();
+                                    } else {
+                                        console.log('等待网络切换完成...');
+                                    }
+                                }, 3000);
+                                return; // 阻止继续执行
+                            } catch (addError) {
+                                document.body.removeChild(loadingMsg);
+                                window.ethereum.removeListener('chainChanged', handleChainChanged);
+                                console.error('❌ 添加网络失败:', addError);
+                                alert(
+                                    `❌ 自动添加网络失败！\n\n` +
+                                    `错误: ${addError.message}\n\n` +
+                                    `请手动在 MetaMask 中添加网络：\n` +
+                                    `- 网络名称: Hardhat Local\n` +
+                                    `- RPC URL: http://127.0.0.1:8545\n` +
+                                    `- Chain ID: 1337\n` +
+                                    `- 货币符号: ETH\n\n` +
+                                    `详细步骤请查看文档：docs/MetaMask本地网络配置指南.md`
+                                );
+                                // 即使失败也阻止继续执行
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('❌ 网络切换过程出错:', error);
+                            alert(
+                                `❌ 网络切换失败！\n\n` +
+                                `错误: ${error.message}\n\n` +
+                                `请手动在 MetaMask 中切换到本地网络。\n\n` +
+                                `查看文档：docs/MetaMask本地网络配置指南.md`
+                            );
+                            return; // 阻止继续执行
+                        }
+                    } else {
+                        // 用户取消了切换，阻止继续执行
+                        alert(
+                            `⚠️ 需要切换到本地网络才能继续\n\n` +
+                            `当前网络: Chain ID ${currentChainId}\n` +
+                            `需要网络: Chain ID ${EXPECTED_CHAIN_ID}\n\n` +
+                            `请在 MetaMask 中切换到本地 Hardhat 网络，然后刷新页面。`
+                        );
+                        return; // 阻止继续执行
+                    }
+                } else {
+                    console.log('✅ Chain ID 匹配，网络正确');
+                }
+                
+                // 查询连接的账户余额作为对比
+                const accountBalance = await provider.getBalance(account);
+                console.log('连接的账户余额 (ETH):', ethers.utils.formatEther(accountBalance));
+                
+                // 加载合约地址
+                await loadContractAddresses();
+                
+                // 初始化合约
+                await initializeContracts();
+
+                // 显示仪表板
+                document.getElementById('wallet-section').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+
+                // 加载数据
+                await loadRevenueData();
+                
+                // 加载订单统计数据
+                await loadOrderStatistics();
+                
+                // 加载争议订单数据
+                if (typeof loadDisputes === 'function') {
+                    await loadDisputes();
+                }
+                
+                // 启动平台收入数据自动刷新
+                if (typeof window.startPlatformAutoRefresh === 'function') {
+                    window.startPlatformAutoRefresh();
+                }
+            } catch (error) {
+                console.error('连接钱包失败:', error);
+                alert('连接钱包失败: ' + error.message);
+            }
+        }
+
+        // 加载合约地址和ABI
+        async function loadContractAddresses() {
+            try {
+                const response = await fetch('/deployments/localhost-latest.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // 检查 Content-Type 是否为 JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('响应不是有效的 JSON 格式');
+                }
+                
+                const deployment = await response.json();
+                window.contractAddresses = {
+                    rideOrder: deployment.contracts.rideOrder,
+                    platformWallet: deployment.configuration?.platformWallet
+                };
+                
+                // 加载完整的ABI文件
+                try {
+                    const abiResponse = await fetch('/contracts/abi/TrustFlowRide.json');
+                    if (abiResponse.ok) {
+                        window.contractABI = await abiResponse.json();
+                        console.log('[PLATFORM] 成功加载完整的合约ABI');
+                        window.logger?.info('[PLATFORM] 成功加载完整的合约ABI', { abiLength: window.contractABI?.length || 0 });
+                    } else {
+                        console.warn('[PLATFORM] 无法加载完整ABI文件，将使用手动定义的ABI');
+                        window.logger?.warn('[PLATFORM] 无法加载完整ABI文件', { status: abiResponse.status });
+                    }
+                } catch (abiError) {
+                    console.warn('[PLATFORM] 加载ABI文件失败，将使用手动定义的ABI:', abiError);
+                    window.logger?.warn('[PLATFORM] 加载ABI文件失败', { error: abiError.message });
+                }
+                
+                if (window.contractAddresses.platformWallet) {
+                    const platformWalletAddress = window.contractAddresses.platformWallet;
+                    document.getElementById('platform-wallet-address').textContent = platformWalletAddress;
+                    console.log('平台钱包地址已加载:', platformWalletAddress);
+                } else {
+                    console.warn('平台钱包地址未找到');
+                }
+            } catch (error) {
+                console.error('加载合约地址失败:', error);
+                alert('加载合约地址失败: ' + error.message + '\n请确保已部署合约并生成了部署文件。');
+            }
+        }
+
+        // 前端日志功能
+        const frontendLogger = {
+            logs: [],
+            maxLogs: 1000, // 最多保存1000条日志
+            pendingLogs: [], // 待发送的日志队列
+            sendTimer: null, // 批量发送定时器
+            lastSendTime: 0, // 上次发送时间
+            sendInterval: 5000, // 批量发送间隔（5秒）
+            maxPendingLogs: 50, // 最多累积50条日志再发送
+            isSending: false, // 是否正在发送
+            
+            log(level, message, data = {}) {
+                const logEntry = {
+                    timestamp: new Date().toISOString(),
+                    level: level,
+                    message: message,
+                    data: data,
+                    url: window.location.href
+                };
+                
+                // 添加到内存数组
+                this.logs.push(logEntry);
+                if (this.logs.length > this.maxLogs) {
+                    this.logs.shift(); // 移除最旧的日志
+                }
+                
+                // 控制台输出
+                const consoleMethod = console[level] || console.log;
+                consoleMethod(`[${logEntry.timestamp}] [${level.toUpperCase()}] ${message}`, data);
+                
+                // 只发送error和warn级别的日志，减少请求量
+                // debug和info级别不发送到后端，只保存在内存中
+                if (level === 'error' || level === 'warn') {
+                    this.queueLogForSending(logEntry);
+                }
+            },
+            
+            queueLogForSending(logEntry) {
+                // 添加来源标识
+                logEntry.source = 'platform';
+                // 添加到待发送队列
+                this.pendingLogs.push(logEntry);
+                
+                // 如果队列满了，立即发送
+                if (this.pendingLogs.length >= this.maxPendingLogs) {
+                    this.flushPendingLogs();
+                    return;
+                }
+                
+                // 设置定时器批量发送（如果还没有设置）
+                if (!this.sendTimer) {
+                    this.sendTimer = setTimeout(() => {
+                        this.flushPendingLogs();
+                        this.sendTimer = null;
+                    }, this.sendInterval);
+                }
+            },
+            
+            async flushPendingLogs() {
+                // 如果正在发送或队列为空，跳过
+                if (this.isSending || this.pendingLogs.length === 0) {
+                    return;
+                }
+                
+                // 节流：如果距离上次发送时间太短，延迟发送
+                const now = Date.now();
+                if (now - this.lastSendTime < 2000) {
+                    // 如果已经有定时器，不重复设置
+                    if (!this.sendTimer) {
+                        this.sendTimer = setTimeout(() => {
+                            this.flushPendingLogs();
+                            this.sendTimer = null;
+                        }, 2000 - (now - this.lastSendTime));
+                    }
+                    return;
+                }
+                
+                this.isSending = true;
+                const logsToSend = [...this.pendingLogs];
+                this.pendingLogs = [];
+                this.lastSendTime = now;
+                
+                // 清除定时器
+                if (this.sendTimer) {
+                    clearTimeout(this.sendTimer);
+                    this.sendTimer = null;
+                }
+                
+                try {
+                    // 批量发送日志
+                    const API_BASE_URL = window.API_BASE_URL || '';
+                    await fetch(`${API_BASE_URL}/api/logs/frontend`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            logs: logsToSend.map(logEntry => ({
+                                timestamp: logEntry.timestamp,
+                                level: logEntry.level,
+                                message: logEntry.message,
+                                url: logEntry.url,
+                                // 限制data字段大小（最多1000字符）
+                                data: typeof logEntry.data === 'string' 
+                                    ? logEntry.data.substring(0, 1000)
+                                    : typeof logEntry.data === 'object'
+                                        ? JSON.stringify(logEntry.data).substring(0, 1000)
+                                        : logEntry.data
+                            }))
+                        })
+                    });
+                } catch (error) {
+                    // 发送失败，将日志重新加入队列（最多保留最近20条）
+                    this.pendingLogs = [...logsToSend.slice(-20), ...this.pendingLogs];
+                    // 静默失败，不影响主流程
+                } finally {
+                    this.isSending = false;
+                }
+            },
+            
+            // 下载日志文件
+            downloadLogs() {
+                const logText = this.logs.map(log => 
+                    `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message} | Data: ${JSON.stringify(log.data)} | URL: ${log.url}`
+                ).join('\n');
+                
+                const blob = new Blob([logText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `frontend-logs-${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+        
+        // 封装常用的日志方法
+        window.logger = {
+            info: (msg, data) => frontendLogger.log('info', msg, data),
+            warn: (msg, data) => frontendLogger.log('warn', msg, data),
+            error: (msg, data) => frontendLogger.log('error', msg, data),
+            debug: (msg, data) => frontendLogger.log('debug', msg, data),
+            download: () => frontendLogger.downloadLogs()
+        };
+        
+        // 记录页面加载
+        window.logger.info('Platform Dashboard 页面加载', {
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        });
+        
+        // 记录API请求（拦截fetch）- 但排除日志API，避免无限循环
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const [url, options = {}] = args;
+            
+            // 排除日志API和静态资源，避免记录日志请求本身
+            const urlString = String(url);
+            if (urlString.includes('/api/logs/frontend') || 
+                urlString.includes('.js') || 
+                urlString.includes('.css') ||
+                urlString.includes('.png') ||
+                urlString.includes('.jpg') ||
+                urlString.includes('.ico')) {
+                return originalFetch(...args);
+            }
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await originalFetch(...args);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                // 只记录错误响应，正常响应不记录（减少日志量）
+                if (response.status >= 400) {
+                    window.logger.warn('API响应异常', {
+                        method: options.method || 'GET',
+                        url: urlString,
+                        status: response.status,
+                        statusText: response.statusText,
+                        duration: `${duration}ms`
+                    });
+                }
+                
+                return response;
+            } catch (error) {
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                // 只记录错误
+                window.logger.error('API请求失败', {
+                    method: options.method || 'GET',
+                    url: urlString,
+                    error: error.message,
+                    duration: `${duration}ms`
+                });
+                
+                throw error;
+            }
+        };
+
+        // 初始化合约
+        async function initializeContracts() {
+            // 优先使用完整ABI，如果加载失败则使用手动定义的简化ABI
+            let TRUST_FLOW_RIDE_ABI = window.contractABI;
+            
+            // 验证ABI格式
+            if (TRUST_FLOW_RIDE_ABI) {
+                if (!Array.isArray(TRUST_FLOW_RIDE_ABI)) {
+                    console.error('[PLATFORM] ABI格式错误：不是数组格式', typeof TRUST_FLOW_RIDE_ABI);
+                    window.logger?.error('[PLATFORM] ABI格式错误', { type: typeof TRUST_FLOW_RIDE_ABI, abi: TRUST_FLOW_RIDE_ABI });
+                    TRUST_FLOW_RIDE_ABI = null; // 重置，使用手动定义的ABI
+                } else {
+                    console.log(`[PLATFORM] 使用完整的合约ABI (${TRUST_FLOW_RIDE_ABI.length} 个条目)`);
+                    window.logger?.info('[PLATFORM] 使用完整的合约ABI', { abiLength: TRUST_FLOW_RIDE_ABI.length });
+                    
+                    // 验证ABI中是否包含必需的函数
+                    const hasGetOrder = TRUST_FLOW_RIDE_ABI.some(item => 
+                        item.type === 'function' && item.name === 'getOrder'
+                    );
+                    const hasGetDisputeStatus = TRUST_FLOW_RIDE_ABI.some(item => 
+                        item.type === 'function' && item.name === 'getDisputeStatus'
+                    );
+                    
+                    if (!hasGetOrder || !hasGetDisputeStatus) {
+                        console.warn('[PLATFORM] 完整ABI中缺少必需函数，将使用手动定义的ABI', {
+                            hasGetOrder,
+                            hasGetDisputeStatus
+                        });
+                        window.logger?.warn('[PLATFORM] 完整ABI中缺少必需函数', { hasGetOrder, hasGetDisputeStatus });
+                        TRUST_FLOW_RIDE_ABI = null; // 重置，使用手动定义的ABI
+                    }
+                }
+            }
+            
+            if (!TRUST_FLOW_RIDE_ABI) {
+                console.warn('[PLATFORM] 使用手动定义的简化ABI（完整ABI加载失败或无效）');
+                window.logger?.warn('[PLATFORM] 使用手动定义的简化ABI');
+                // 手动定义的简化ABI（仅包含必需的函数和事件）
+                TRUST_FLOW_RIDE_ABI = [
+                    "event PaymentReleased(uint256 indexed orderId, address indexed driver, uint256 driverAmount, uint256 platformFee)",
+                    "event RideStarted(uint256 indexed orderId, uint256 timestamp)",
+                    "event RideCompleted(uint256 indexed orderId, uint256 timestamp)",
+                    "event RideSettled(uint256 indexed orderId, uint256 timestamp)",
+                    "event OrderAccepted(uint256 indexed orderId, address indexed driver)",
+                    "event DisputeOpened(uint256 indexed orderId, address indexed by, string reason, uint256 timestamp)",
+                    "event DisputeResolved(uint256 indexed orderId, address indexed winner, string detail, uint256 timestamp)",
+                    "function platformWallet() external view returns (address)",
+                    "function getOrder(uint256 _orderId) external view returns (tuple(uint256 orderId, address passenger, address driver, tuple(int256 latitude, int256 longitude, string addressText) pickup, tuple(int256 latitude, int256 longitude, string addressText) destination, string category, string subCategory, uint256 estimatedFare, uint256 actualFare, uint8 status, uint8 rideStatus, uint256 createdAt, uint256 acceptedAt, uint256 pickedUpAt, uint256 completedAt, uint256 startTimestamp, uint256 endTimestamp, string ipfsHash, bool disputeOpened, bool disputeResolved, address disputeOpener, address disputeWinner, string disputeReason, uint256 disputeOpenedAt, uint256 disputeResolvedAt, string disputeResolutionDetail))",
+                    "function getDisputeStatus(uint256 _orderId) external view returns (bool disputeOpened, string memory disputeReason, bool disputeResolved, address disputeOpener, address disputeWinner, uint256 disputeOpenedAt, uint256 disputeResolvedAt, string memory disputeResolutionDetail, uint8 rideStatus)",
+                    "function resolveDispute(uint256 _orderId, address _winner, string memory _detail) external",
+                    "function settle(uint256 _orderId) external",
+                    "function orderCount() external view returns (uint256)"
+                ];
+            }
+
+            if (window.contractAddresses?.rideOrder) {
+                const contractAddress = window.contractAddresses.rideOrder;
+                console.log(`[PLATFORM] 初始化合约实例，地址: ${contractAddress}`);
+                window.logger?.info('[PLATFORM] 初始化合约实例', { 
+                    contractAddress,
+                    abiType: Array.isArray(TRUST_FLOW_RIDE_ABI) ? 'array' : typeof TRUST_FLOW_RIDE_ABI,
+                    abiLength: Array.isArray(TRUST_FLOW_RIDE_ABI) ? TRUST_FLOW_RIDE_ABI.length : 'N/A'
+                });
+                
+                try {
+                    // 使用 provider 创建合约实例（用于读取操作）
+                    contracts.rideOrder = new ethers.Contract(
+                        contractAddress,
+                        TRUST_FLOW_RIDE_ABI,
+                        provider
+                    );
+                    
+                    console.log('[PLATFORM] 合约实例创建成功（只读）');
+                    
+                    // 验证合约实例是否有效
+                    if (!contracts.rideOrder || !contracts.rideOrder.address) {
+                        throw new Error('合约实例创建失败：地址无效');
+                    }
+                    
+                    // 如果有 signer，也创建一个带 signer 的合约实例（用于写入操作）
+                    if (signer) {
+                        contracts.rideOrderWithSigner = new ethers.Contract(
+                            contractAddress,
+                            TRUST_FLOW_RIDE_ABI,
+                            signer
+                        );
+                        console.log('[PLATFORM] 合约实例创建成功（可写）');
+                    }
+                    
+                    // 将 contracts 赋值给 window.contracts 以便全局访问
+                    window.contracts = contracts;
+                    
+                    // 设置事件监听器
+                    setupPlatformEventListeners();
+                    
+                    console.log('[PLATFORM] 合约初始化完成');
+                    window.logger?.info('[PLATFORM] 合约初始化完成', { contractAddress });
+                } catch (error) {
+                    console.error('[PLATFORM] 合约初始化失败:', error);
+                    window.logger?.error('[PLATFORM] 合约初始化失败', {
+                        error: error.message,
+                        stack: error.stack,
+                        contractAddress,
+                        abiType: Array.isArray(TRUST_FLOW_RIDE_ABI) ? 'array' : typeof TRUST_FLOW_RIDE_ABI
+                    });
+                    throw error;
+                }
+            } else {
+                console.error('[PLATFORM] 合约地址未设置');
+                window.logger?.error('[PLATFORM] 合约地址未设置', { contractAddresses: window.contractAddresses });
+            }
+        }
+        
+        // 设置平台端事件监听器
+        function setupPlatformEventListeners() {
+            if (!contracts.rideOrder) {
+                console.warn('⚠️ 合约未初始化，无法设置事件监听器');
+                return;
+            }
+            
+            console.log('📡 设置平台端订单状态事件监听器...');
+            
+            // 先移除旧的监听器，避免重复监听
+            try {
+                contracts.rideOrder.removeAllListeners('RideStarted');
+                contracts.rideOrder.removeAllListeners('RideCompleted');
+                contracts.rideOrder.removeAllListeners('RideSettled');
+                contracts.rideOrder.removeAllListeners('PaymentReleased');
+                contracts.rideOrder.removeAllListeners('OrderAccepted');
+                contracts.rideOrder.removeAllListeners('DisputeOpened');
+                contracts.rideOrder.removeAllListeners('DisputeResolved');
+            } catch (e) {
+                console.warn('移除旧监听器时出错（可忽略）:', e);
+            }
+            
+            // 事件触发刷新函数（带防抖）
+            let eventRefreshTimer = null;
+            function scheduleEventRefresh() {
+                if (eventRefreshTimer) {
+                    clearTimeout(eventRefreshTimer);
+                }
+                eventRefreshTimer = setTimeout(() => {
+                    console.log('🔄 响应事件，刷新平台数据...');
+                    loadRevenueData(false).catch(err => {
+                        console.error('刷新平台收入数据失败:', err);
+                    });
+                    // 刷新订单统计数据
+                    if (window.loadOrderStatistics) {
+                        window.loadOrderStatistics().catch(err => {
+                            console.error('刷新订单统计数据失败:', err);
+                        });
+                    }
+                    // 如果当前在活跃订单tab，也刷新活跃订单列表
+                    const activeTab = document.getElementById('tab-content-active');
+                    if (activeTab && activeTab.style.display !== 'none') {
+                        if (window.loadActiveOrders) {
+                            window.loadActiveOrders().catch(err => {
+                                console.error('刷新活跃订单失败:', err);
+                            });
+                        }
+                    }
+                    // 如果当前在争议订单tab，也刷新争议列表
+                    const disputesTab = document.getElementById('tab-content-disputes');
+                    if (disputesTab && disputesTab.style.display !== 'none') {
+                        if (typeof loadDisputes === 'function') {
+                            loadDisputes().catch(err => {
+                                console.error('刷新争议列表失败:', err);
+                            });
+                        }
+                    }
+                }, 2000); // 2秒防抖，避免多个事件同时触发时重复刷新
+            }
+            
+            // 监听 RideStarted 事件
+            contracts.rideOrder.on('RideStarted', async (orderId, timestamp) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('🚀 Ride Started 事件触发:', orderIdStr);
+                scheduleEventRefresh();
+            });
+            
+            // 监听 RideCompleted 事件
+            contracts.rideOrder.on('RideCompleted', async (orderId, timestamp) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('✅ Ride Completed 事件触发:', orderIdStr);
+                scheduleEventRefresh();
+            });
+            
+            // 监听 RideSettled 事件
+            contracts.rideOrder.on('RideSettled', async (orderId, timestamp) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('💰 Ride Settled 事件触发:', orderIdStr);
+                scheduleEventRefresh();
+            });
+            
+            // 监听 PaymentReleased 事件（平台收入相关）
+            contracts.rideOrder.on('PaymentReleased', async (orderId, driver, driverAmount, platformFee) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('💵 Payment Released 事件触发:', orderIdStr, 'Platform Fee:', ethers.utils.formatEther(platformFee));
+                scheduleEventRefresh();
+            });
+            
+            // 监听 OrderAccepted 事件
+            contracts.rideOrder.on('OrderAccepted', async (orderId, driver) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('📋 Order Accepted 事件触发:', orderIdStr);
+                scheduleEventRefresh();
+            });
+            
+            // 监听 DisputeOpened 事件
+            contracts.rideOrder.on('DisputeOpened', async (orderId, by, reason, timestamp) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('⚖️ Dispute Opened 事件触发:', orderIdStr, reason);
+                scheduleEventRefresh();
+                // 无论当前在哪个 tab，都刷新争议列表（确保数据是最新的）
+                if (typeof loadDisputes === 'function') {
+                    console.log('🔄 刷新争议列表...');
+                    loadDisputes().catch(err => {
+                        console.error('刷新争议列表失败:', err);
+                    });
+                }
+            });
+            
+            // 监听 DisputeResolved 事件
+            contracts.rideOrder.on('DisputeResolved', async (orderId, winner, detail, timestamp) => {
+                const orderIdStr = orderId.toString ? orderId.toString() : String(orderId);
+                console.log('✅ Dispute Resolved 事件触发:', orderIdStr, winner);
+                scheduleEventRefresh();
+                // 无论当前在哪个 tab，都刷新争议列表（确保数据是最新的）
+                if (typeof loadDisputes === 'function') {
+                    console.log('🔄 刷新争议列表...');
+                    loadDisputes().catch(err => {
+                        console.error('刷新争议列表失败:', err);
+                    });
+                }
+            });
+            
+            console.log('✅ 平台端订单状态事件监听器已设置完成');
+        }
+
+        // 加载收入数据
+        let isLoadingRevenue = false;
+        let lastLoadTime = 0;
+        const MIN_LOAD_INTERVAL = 2000; // 最小加载间隔 2 秒，防止频繁刷新
+        
+        async function loadRevenueData(showLoading = true) {
+            if (!contracts.rideOrder) {
+                alert('合约未初始化，请刷新页面重试');
+                return;
+            }
+
+            // 防止并发加载
+            if (isLoadingRevenue) {
+                console.log('⏸️ 数据正在加载中，跳过本次请求');
+                return;
+            }
+
+            // 节流：如果距离上次加载时间太短，则延迟执行
+            const now = Date.now();
+            if (now - lastLoadTime < MIN_LOAD_INTERVAL) {
+                const delay = MIN_LOAD_INTERVAL - (now - lastLoadTime);
+                console.log(`⏸️ 距离上次加载时间过短，延迟 ${delay}ms 后执行`);
+                setTimeout(() => loadRevenueData(showLoading), delay);
+                return;
+            }
+
+            isLoadingRevenue = true;
+            lastLoadTime = now;
+
+            // 只在需要时显示加载状态（避免闪烁）
+            if (showLoading && revenueData.length === 0) {
+                document.getElementById('loading-revenue').style.display = 'block';
+                document.getElementById('revenue-list').style.display = 'none';
+                document.getElementById('empty-state-revenue').style.display = 'none';
+            }
+
+            try {
+                // 查询 PaymentReleased 事件
+                const filter = contracts.rideOrder.filters.PaymentReleased();
+                const currentBlock = await provider.getBlockNumber();
+                const events = await contracts.rideOrder.queryFilter(filter, 0, currentBlock);
+
+                // 使用 Map 去重，基于 orderId + transactionHash（防止同一订单的重复事件）
+                const uniqueEventsMap = new Map();
+                for (const event of events) {
+                    const key = `${event.args.orderId.toString()}-${event.transactionHash}`;
+                    if (!uniqueEventsMap.has(key)) {
+                        uniqueEventsMap.set(key, event);
+                    }
+                }
+
+                // 处理事件数据
+                const newRevenueData = [];
+                for (const event of uniqueEventsMap.values()) {
+                    const receipt = await provider.getTransactionReceipt(event.transactionHash);
+                    const tx = await provider.getTransaction(event.transactionHash);
+                    const block = await provider.getBlock(receipt.blockNumber);
+
+                    newRevenueData.push({
+                        orderId: event.args.orderId.toString(),
+                        driver: event.args.driver,
+                        driverAmount: event.args.driverAmount,
+                        platformFee: event.args.platformFee,
+                        transactionHash: event.transactionHash,
+                        blockNumber: receipt.blockNumber,
+                        timestamp: block.timestamp
+                    });
+                }
+
+                // 按日期排序（最新的在前）
+                newRevenueData.sort((a, b) => b.timestamp - a.timestamp);
+
+                // 检查数据是否真的变化了（避免不必要的重新渲染）
+                const dataChanged = JSON.stringify(revenueData.map(d => ({
+                    orderId: d.orderId,
+                    transactionHash: d.transactionHash
+                }))) !== JSON.stringify(newRevenueData.map(d => ({
+                    orderId: d.orderId,
+                    transactionHash: d.transactionHash
+                })));
+
+                if (dataChanged || revenueData.length === 0) {
+                    revenueData = newRevenueData;
+
+                    // 更新统计数据
+                    await updateStatistics();
+
+                    // 渲染列表
+                    renderRevenueList();
+                } else {
+                    console.log('📊 数据未变化，跳过重新渲染');
+                }
+
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                if (showLoading) {
+                    alert('加载数据失败: ' + error.message);
+                }
+            } finally {
+                isLoadingRevenue = false;
+                if (showLoading) {
+                    document.getElementById('loading-revenue').style.display = 'none';
+                }
+            }
+        }
+        
+        // 平台收入数据自动刷新 - 轮询机制（增加间隔以减少调用）
+        let platformRefreshInterval = null;
+        const PLATFORM_REFRESH_INTERVAL = 30000; // 30秒刷新一次（从10秒增加到30秒）
+        
+        function startPlatformAutoRefresh() {
+            // 如果已经有定时器，先清除
+            if (platformRefreshInterval) {
+                clearInterval(platformRefreshInterval);
+            }
+            
+            // 创建新的定时器
+            platformRefreshInterval = setInterval(() => {
+                if (contracts?.rideOrder && provider) {
+                    console.log('🔄 自动刷新平台收入数据...');
+                    loadRevenueData(false).catch(err => {
+                        console.error('自动刷新平台收入数据失败:', err);
+                    });
+                }
+            }, PLATFORM_REFRESH_INTERVAL);
+            
+            console.log('✅ 平台收入数据自动刷新已启动（每', PLATFORM_REFRESH_INTERVAL / 1000, '秒）');
+        }
+        
+        function stopPlatformAutoRefresh() {
+            if (platformRefreshInterval) {
+                clearInterval(platformRefreshInterval);
+                platformRefreshInterval = null;
+                console.log('⏸️ 平台收入数据自动刷新已停止');
+            }
+        }
+        
+        window.startPlatformAutoRefresh = startPlatformAutoRefresh;
+        window.stopPlatformAutoRefresh = stopPlatformAutoRefresh;
+
+        // 更新统计数据
+        // 余额查询缓存（避免频繁调用 eth_call）
+        let balanceCache = {
+            platformBalance: null,
+            accountBalance: null,
+            lastUpdate: 0,
+            cacheDuration: 30000 // 30秒缓存
+        };
+        
+        async function updateStatistics() {
+            const totalRevenue = revenueData.reduce((sum, item) => 
+                sum.add(item.platformFee), 
+                ethers.BigNumber.from(0)
+            );
+
+            // 查询平台钱包余额（使用缓存机制）
+            try {
+                const platformWallet = window.contractAddresses?.platformWallet;
+                const now = Date.now();
+                const cacheExpired = (now - balanceCache.lastUpdate) > balanceCache.cacheDuration;
+                
+                if (platformWallet) {
+                    // 如果缓存未过期，使用缓存值
+                    if (!cacheExpired && balanceCache.platformBalance !== null) {
+                        const balanceETH = balanceCache.platformBalance;
+                        document.getElementById('current-balance').textContent = 
+                            balanceETH.toFixed(8);
+                        document.getElementById('current-balance-usd').textContent = 
+                            '$' + (balanceETH * ETH_TO_USD_RATE).toFixed(2) + ' USD';
+                    } else {
+                        // 缓存过期或不存在，重新查询
+                        const balance = await provider.getBalance(platformWallet);
+                        const balanceETH = parseFloat(ethers.utils.formatEther(balance));
+                        
+                        // 更新缓存
+                        balanceCache.platformBalance = balanceETH;
+                        balanceCache.lastUpdate = now;
+                        
+                        document.getElementById('current-balance').textContent = 
+                            balanceETH.toFixed(8);
+                        document.getElementById('current-balance-usd').textContent = 
+                            '$' + (balanceETH * ETH_TO_USD_RATE).toFixed(2) + ' USD';
+                    }
+                } else {
+                    console.warn('平台钱包地址未加载');
+                    document.getElementById('current-balance').textContent = 'N/A';
+                    document.getElementById('current-balance-usd').textContent = 'N/A';
+                }
+            } catch (error) {
+                console.error('查询平台钱包余额失败:', error);
+                // 如果查询失败，尝试使用缓存值
+                if (balanceCache.platformBalance !== null) {
+                    const balanceETH = balanceCache.platformBalance;
+                    document.getElementById('current-balance').textContent = 
+                        balanceETH.toFixed(8) + ' (cached)';
+                    document.getElementById('current-balance-usd').textContent = 
+                        '$' + (balanceETH * ETH_TO_USD_RATE).toFixed(2) + ' USD';
+                } else {
+                    document.getElementById('current-balance').textContent = 'Error';
+                    document.getElementById('current-balance-usd').textContent = 'Error';
+                }
+            }
+
+            document.getElementById('total-revenue-eth').textContent = 
+                parseFloat(ethers.utils.formatEther(totalRevenue)).toFixed(8);
+            document.getElementById('total-revenue-usd').textContent = 
+                '$' + (parseFloat(ethers.utils.formatEther(totalRevenue)) * ETH_TO_USD_RATE).toFixed(2) + ' USD';
+            
+            // 从API获取订单总数（从order文件数量）
+            try {
+                const response = await fetch('/api/platform/summary');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        document.getElementById('total-transactions').textContent = result.data.totalTransactions || 0;
+                    } else {
+                        document.getElementById('total-transactions').textContent = revenueData.length;
+                    }
+                } else {
+                    document.getElementById('total-transactions').textContent = revenueData.length;
+                }
+            } catch (error) {
+                console.error('获取订单总数失败:', error);
+                document.getElementById('total-transactions').textContent = revenueData.length;
+            }
+        }
+
+        // 当前选中的状态筛选
+        let currentStatusFilter = 'all';
+        
+        // 状态筛选函数
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            
+            // 更新Tab高亮
+            document.querySelectorAll('.status-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.background = '#f9fafb';
+                tab.style.color = '#6b7280';
+            });
+            
+            const activeTab = document.getElementById(`status-tab-${status}`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+                activeTab.style.background = '#3b82f6';
+                activeTab.style.color = 'white';
+            }
+            
+            // 重新渲染列表
+            renderRevenueList();
+        }
+        
+        // 渲染收入列表
+        function renderRevenueList() {
+            const container = document.getElementById('revenue-list');
+            const emptyState = document.getElementById('empty-state-revenue');
+            const loading = document.getElementById('loading-revenue');
+
+            // 检查必要的 DOM 元素是否存在
+            if (!container) {
+                console.error('❌ revenue-list 容器不存在');
+                return;
+            }
+
+            // 确保加载状态已隐藏
+            if (loading) {
+                loading.style.display = 'none';
+            }
+
+            // 应用筛选
+            let filteredData = revenueData;
+            
+            // 状态筛选（移除，因为不再有orderDetails）
+            // 注意：如果需要状态筛选，需要从其他地方获取订单状态
+
+            // 日期筛选
+            const startDateEl = document.getElementById('start-date');
+            const endDateEl = document.getElementById('end-date');
+            const startDate = startDateEl ? startDateEl.value : '';
+            const endDate = endDateEl ? endDateEl.value : '';
+            if (startDate || endDate) {
+                filteredData = filteredData.filter(item => {
+                    const itemDate = new Date(item.timestamp * 1000).toISOString().split('T')[0];
+                    if (startDate && itemDate < startDate) return false;
+                    if (endDate && itemDate > endDate) return false;
+                    return true;
+                });
+            }
+
+            // 搜索筛选
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            if (searchTerm) {
+                filteredData = filteredData.filter(item => 
+                    item.orderId.includes(searchTerm) ||
+                    item.transactionHash.toLowerCase().includes(searchTerm) ||
+                    item.driver.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredData.length === 0) {
+                container.style.display = 'none';
+                if (emptyState) {
+                    emptyState.style.display = 'block';
+                }
+                return;
+            }
+
+            container.style.display = 'flex';
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+
+            container.innerHTML = filteredData.map((item, index) => {
+                const date = new Date(item.timestamp * 1000);
+                const platformFeeETH = ethers.utils.formatEther(item.platformFee);
+                const driverAmountETH = ethers.utils.formatEther(item.driverAmount);
+                const orderAmount = item.driverAmount.add(item.platformFee);
+                const orderAmountETH = ethers.utils.formatEther(orderAmount);
+
+                return `
+                    <div class="revenue-item">
+                        <div class="revenue-header">
+                            <div>
+                                <div class="revenue-date">${date.toLocaleString('zh-CN', { 
+                                    year: 'numeric', 
+                                    month: '2-digit', 
+                                    day: '2-digit', 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                })}</div>
+                                <div style="margin-top: 8px; font-size: 14px; color: #6b7280;">
+                                    ${window.platformTexts?.order || '订单'} #${item.orderId}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="revenue-amount">
+                                    +${parseFloat(platformFeeETH).toFixed(8)} ETH
+                                    <span class="revenue-amount usd">($${(parseFloat(platformFeeETH) * ETH_TO_USD_RATE).toFixed(2)})</span>
+                                </div>
+                                <button class="btn-details" onclick="showDetailModal(${index})" data-index="${index}">
+                                    ${window.platformTexts?.details || '详情'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 存储筛选后的数据供详情使用
+            window.filteredRevenueData = filteredData;
+        }
+
+        // 显示详情模态框
+        // 参数可以是索引（数字）或订单ID（字符串）
+        async function showDetailModal(indexOrOrderId) {
+            let item = null;
+            
+            // 判断参数是索引还是订单ID
+            if (typeof indexOrOrderId === 'number') {
+                // 是索引，从 filteredRevenueData 获取
+                if (!window.filteredRevenueData || !window.filteredRevenueData[indexOrOrderId]) {
+                    console.error('无法找到索引对应的收入数据:', indexOrOrderId);
+                    return;
+                }
+                item = window.filteredRevenueData[indexOrOrderId];
+            } else {
+                // 是订单ID，从 disputeData 或 revenueData 中查找
+                const orderIdStr = indexOrOrderId.toString();
+                
+                // 先从争议数据中查找
+                const dispute = disputeData.find(d => d.orderId === orderIdStr);
+                if (dispute && dispute.orderDetails) {
+                    // 构造与 revenueData 相同格式的数据
+                    const orderDetails = dispute.orderDetails;
+                    const estimatedFare = orderDetails.estimatedFare || orderDetails.actualFare || ethers.BigNumber.from(0);
+                    const platformFee = estimatedFare.mul(5).div(100); // 5%
+                    const driverAmount = estimatedFare.sub(platformFee);
+                    
+                    item = {
+                        orderId: orderIdStr,
+                        driver: orderDetails.driver && orderDetails.driver !== ethers.constants.AddressZero ? orderDetails.driver : orderDetails.passenger,
+                        platformFee: platformFee,
+                        driverAmount: driverAmount,
+                        timestamp: dispute.timestamp || dispute.disputeOpenedAt || Math.floor(Date.now() / 1000),
+                        blockNumber: dispute.blockNumber || 0,
+                        transactionHash: dispute.transactionHash || '',
+                        orderDetails: orderDetails,
+                        disputeInfo: {
+                            openedBy: dispute.openedBy,
+                            reason: dispute.reason,
+                            disputeOpened: dispute.disputeOpened,
+                            disputeResolved: dispute.disputeResolved,
+                            disputeWinner: dispute.disputeWinner,
+                            disputeOpenedAt: dispute.disputeOpenedAt,
+                            disputeResolvedAt: dispute.disputeResolvedAt,
+                            disputeResolutionDetail: dispute.disputeResolutionDetail
+                        }
+                    };
+                } else {
+                    // 从收入数据中查找
+                    const revenueItem = revenueData.find(r => r.orderId === orderIdStr);
+                    if (revenueItem) {
+                        item = revenueItem;
+                    } else {
+                        console.error('无法找到订单ID对应的数据:', orderIdStr);
+                        alert('未找到该订单的详细信息');
+                        return;
+                    }
+                }
+            }
+            
+            if (!item) return;
+
+            const date = new Date(item.timestamp * 1000);
+            const platformFeeETH = ethers.utils.formatEther(item.platformFee);
+            const driverAmountETH = ethers.utils.formatEther(item.driverAmount);
+            const orderAmount = item.driverAmount.add(item.platformFee);
+            const orderAmountETH = ethers.utils.formatEther(orderAmount);
+
+            // 获取用户信息（司机和乘客）
+            let driverInfo = { id: null, nickname: null };
+            let passengerInfo = { id: null, nickname: null };
+            let orderHistory = { history: [] };
+            
+            try {
+                const addresses = [item.driver];
+                
+                // 批量获取用户信息
+                const userInfoResponse = await fetch('/api/user-info/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ addresses: addresses })
+                });
+                
+                if (userInfoResponse.ok) {
+                    const result = await userInfoResponse.json();
+                    if (result.success && result.data) {
+                        driverInfo = result.data[item.driver] || { id: null, nickname: null };
+                    }
+                }
+                
+                // 获取订单历史状态
+                const historyResponse = await fetch(`/api/order-history/${item.orderId}`);
+                if (historyResponse.ok) {
+                    const historyResult = await historyResponse.json();
+                    if (historyResult.success && historyResult.data) {
+                        orderHistory = historyResult.data;
+                    }
+                }
+            } catch (error) {
+                console.error('获取用户信息或订单历史失败:', error);
+            }
+
+            const t = window.platformTexts || {};
+            const isZh = getCurrentLang() === 'zh';
+            const dateLocale = isZh ? 'zh-CN' : 'en-US';
+            
+            const modalBody = document.getElementById('modal-body');
+            modalBody.innerHTML = `
+                <div class="transaction-detail">
+                    <div class="detail-section">
+                        <h3>📋 ${t.basicInfo || '基本信息'}</h3>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.orderId || '订单ID'}</span>
+                            <span class="detail-row-value">#${item.orderId}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.transactionTime || '交易时间'}</span>
+                            <span class="detail-row-value">${date.toLocaleString(dateLocale)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.blockNumber || '区块号'}</span>
+                            <span class="detail-row-value">#${item.blockNumber}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.transactionHash || '交易哈希'}</span>
+                            <span class="detail-row-value">
+                                ${item.transactionHash}
+                                <button class="copy-btn" onclick="copyToClipboard('${item.transactionHash}')">${t.copy || t.clickToCopy || '复制'}</button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>💰 ${t.amountDetails || '金额明细'}</h3>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.orderAmount || '订单总额'}</span>
+                            <span class="detail-row-value">${parseFloat(orderAmountETH).toFixed(8)} ETH ($${(parseFloat(orderAmountETH) * ETH_TO_USD_RATE).toFixed(2)})</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.platformFee || '平台费 (5%)'}</span>
+                            <span class="detail-row-value" style="color: #10b981;">${parseFloat(platformFeeETH).toFixed(8)} ETH ($${(parseFloat(platformFeeETH) * ETH_TO_USD_RATE).toFixed(2)})</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.driverEarnings || '司机收入 (95%)'}</span>
+                            <span class="detail-row-value">${parseFloat(driverAmountETH).toFixed(8)} ETH ($${(parseFloat(driverAmountETH) * ETH_TO_USD_RATE).toFixed(2)})</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>👥 ${t.participants || '参与方'}</h3>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.driverSide || '接单端（司机）'}</span>
+                            <span class="detail-row-value">
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                    ${driverInfo.nickname ? `<div style="font-weight: 600; color: #1f2937;">${driverInfo.nickname}</div>` : ''}
+                                    ${driverInfo.id ? `<div style="font-size: 12px; color: #6b7280;">ID: ${driverInfo.id}</div>` : ''}
+                                    <div style="font-size: 12px; color: #9ca3af; font-family: monospace;">
+                                        ${item.driver}
+                                        <button class="copy-btn" onclick="copyToClipboard('${item.driver}')" style="margin-left: 4px;">${t.copy || '复制'}</button>
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.platformWallet || '平台钱包'}</span>
+                            <span class="detail-row-value">
+                                ${window.contractAddresses?.platformWallet || 'N/A'}
+                                <button class="copy-btn" onclick="copyToClipboard('${window.contractAddresses?.platformWallet || ''}')">${t.copy || '复制'}</button>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- 订单历史状态 -->
+                    ${orderHistory.history && orderHistory.history.length > 0 ? `
+                    <div class="detail-section">
+                        <h3>📋 ${t.orderHistory || '订单历史状态'}</h3>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            ${orderHistory.history.map((historyItem, idx) => {
+                                const historyDate = new Date(historyItem.timestamp * 1000);
+                                const eventIcons = {
+                                    'OrderCreated': '📝',
+                                    'OrderAccepted': '✅',
+                                    'PassengerPickedUp': '🚗',
+                                    'RideStarted': '🚀',
+                                    'OrderCompleted': '🎉',
+                                    'DisputeOpened': '⚖️',
+                                    'DisputeResolved': '✅'
+                                };
+                                
+                                // 事件名称到翻译文本的映射（包含后端可能返回的中文描述）
+                                const eventTranslations = {
+                                    'OrderCreated': { zh: '订单创建', en: 'Order Created' },
+                                    'OrderAccepted': { zh: '司机接单', en: 'Order Accepted' },
+                                    'PassengerPickedUp': { zh: '开始接到客人', en: 'Passenger Picked Up' },
+                                    'RideStarted': { zh: '开始接到客人', en: 'Ride Started' },
+                                    'OrderCompleted': { zh: '订单完成', en: 'Order Completed' },
+                                    'DisputeOpened': { zh: '争议开启', en: 'Dispute Opened' },
+                                    'DisputeResolved': { zh: '争议已解决', en: 'Dispute Resolved' },
+                                    'PaymentLocked': { zh: '资金已锁定', en: 'Payment Locked' },
+                                    'PaymentReleased': { zh: '资金已释放', en: 'Payment Released' }
+                                };
+                                
+                                // 后端中文描述到事件名称的映射（用于反向查找）
+                                const descriptionToEvent = {
+                                    '订单创建': 'OrderCreated',
+                                    '司机接单': 'OrderAccepted',
+                                    '开始接到客人': historyItem.event === 'PassengerPickedUp' ? 'PassengerPickedUp' : 'RideStarted',
+                                    '订单完成': 'OrderCompleted',
+                                    '争议开启': 'DisputeOpened',
+                                    '争议已解决': 'DisputeResolved',
+                                    '资金已锁定': 'PaymentLocked',
+                                    '资金已释放': 'PaymentReleased'
+                                };
+                                
+                                const eventIcon = eventIcons[historyItem.event] || '📌';
+                                
+                                // 获取翻译后的描述文本
+                                let displayDescription = historyItem.event;
+                                
+                                // 优先使用事件名称的翻译映射
+                                if (eventTranslations[historyItem.event]) {
+                                    displayDescription = isZh ? eventTranslations[historyItem.event].zh : eventTranslations[historyItem.event].en;
+                                } else if (historyItem.description) {
+                                    // 如果事件名称没有映射，检查description是否是中文
+                                    const isChineseDesc = /[\u4e00-\u9fa5]/.test(historyItem.description);
+                                    if (isChineseDesc) {
+                                        // 如果是中文，尝试通过description找到对应的事件
+                                        const mappedEvent = descriptionToEvent[historyItem.description];
+                                        if (mappedEvent && eventTranslations[mappedEvent]) {
+                                            displayDescription = isZh ? eventTranslations[mappedEvent].zh : eventTranslations[mappedEvent].en;
+                                        } else {
+                                            // 如果找不到映射，且当前是英文，使用事件名称
+                                            displayDescription = isZh ? historyItem.description : historyItem.event;
+                                        }
+                                    } else {
+                                        // 如果description不是中文，直接使用
+                                        displayDescription = historyItem.description;
+                                    }
+                                }
+                                
+                                return `
+                                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                            <span style="font-size: 18px;">${eventIcon}</span>
+                                            <span style="font-weight: 600; color: #1f2937;">${displayDescription}</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #6b7280; margin-left: 26px;">
+                                            ${historyDate.toLocaleString(dateLocale, {
+                                                year: 'numeric',
+                                                month: '2-digit',
+                                                day: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                second: '2-digit'
+                                            })}
+                                            ${historyItem.blockNumber ? ` • ${t.blockLabel || '区块'} #${historyItem.blockNumber}` : ''}
+                                        </div>
+                                        ${historyItem.driver ? `
+                                        <div style="font-size: 11px; color: #9ca3af; margin-left: 26px; margin-top: 4px;">
+                                            ${t.driverLabel || '司机'}: ${historyItem.driver.substring(0, 6)}...${historyItem.driver.substring(historyItem.driver.length - 4)}
+                                        </div>
+                                        ` : ''}
+                                        ${historyItem.reason ? `
+                                        <div style="font-size: 11px; color: #9ca3af; margin-left: 26px; margin-top: 4px;">
+                                            ${t.reasonLabel || '原因'}: ${historyItem.reason}
+                                        </div>
+                                        ` : ''}
+                                        ${historyItem.winner ? `
+                                        <div style="font-size: 11px; color: #9ca3af; margin-left: 26px; margin-top: 4px;">
+                                            ${t.winnerLabel || '获胜方'}: ${historyItem.winner.substring(0, 6)}...${historyItem.winner.substring(historyItem.winner.length - 4)}
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- 争议信息显示 -->
+                    ${item.disputeInfo ? `
+                    <div class="detail-section">
+                        <h3>⚖️ ${t.disputeInfo || '争议信息'}</h3>
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.disputeStatus || '争议状态'}</span>
+                            <span class="detail-row-value">
+                                ${item.disputeInfo.disputeOpened 
+                                    ? (item.disputeInfo.disputeResolved 
+                                        ? `<span style="color: #10b981; font-weight: 600;">✅ ${t.resolvedStatus || '已解决'}</span>` 
+                                        : `<span style="color: #ef4444; font-weight: 600;">⚠️ ${t.pendingStatus || '待处理'}</span>`)
+                                    : `<span style="color: #6b7280;">${t.noDisputeStatus || '无争议'}</span>`}
+                            </span>
+                        </div>
+                        ${item.disputeInfo.openedBy ? `
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.openedBy || '发起人'}</span>
+                            <span class="detail-row-value" style="font-family: monospace; font-size: 12px;">
+                                ${item.disputeInfo.openedBy.substring(0, 6)}...${item.disputeInfo.openedBy.substring(item.disputeInfo.openedBy.length - 4)}
+                                <button class="copy-btn" onclick="copyToClipboard('${item.disputeInfo.openedBy}')">${t.copy || '复制'}</button>
+                            </span>
+                        </div>
+                        ` : ''}
+                        ${item.disputeInfo.reason ? `
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.disputeReason || '争议原因'}</span>
+                            <span class="detail-row-value" style="white-space: pre-wrap; word-break: break-word;">${item.disputeInfo.reason}</span>
+                        </div>
+                        ` : ''}
+                        ${item.disputeInfo.disputeOpenedAt ? `
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.disputeOpenedAt || '争议发起时间'}</span>
+                            <span class="detail-row-value">${new Date(item.disputeInfo.disputeOpenedAt * 1000).toLocaleString(dateLocale)}</span>
+                        </div>
+                        ` : ''}
+                        ${item.disputeInfo.disputeResolved && item.disputeInfo.disputeWinner ? `
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.winner || '获胜方'}</span>
+                            <span class="detail-row-value" style="font-family: monospace; font-size: 12px;">
+                                ${item.disputeInfo.disputeWinner.substring(0, 6)}...${item.disputeInfo.disputeWinner.substring(item.disputeInfo.disputeWinner.length - 4)}
+                                <button class="copy-btn" onclick="copyToClipboard('${item.disputeInfo.disputeWinner}')">${t.copy || '复制'}</button>
+                            </span>
+                        </div>
+                        ` : ''}
+                        ${item.disputeInfo.disputeResolvedAt ? `
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.resolvedAt || '解决时间'}</span>
+                            <span class="detail-row-value">${new Date(item.disputeInfo.disputeResolvedAt * 1000).toLocaleString(dateLocale)}</span>
+                        </div>
+                        ` : ''}
+                        ${item.disputeInfo.disputeResolutionDetail ? `
+                        <div class="detail-row">
+                            <span class="detail-row-label">${t.resolutionDetail || '裁决说明'}</span>
+                            <span class="detail-row-value" style="white-space: pre-wrap; word-break: break-word;">${item.disputeInfo.disputeResolutionDetail}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Dispute Management Panel -->
+                    <div class="admin-dispute-panel" id="dispute-panel-${item.orderId}">
+                        <h3>⚖️ ${window.platformTexts?.disputes || '争议订单'}</h3>
+                        <div id="dispute-status-display-${item.orderId}" style="margin-bottom: 16px;"></div>
+                        <div style="margin-top: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">${t.winnerWalletAddress || '获胜方钱包地址'}:</label>
+                            <input type="text" id="winner-address-${item.orderId}" placeholder="${t.enterWinnerAddress || '输入获胜方钱包地址...'}" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; margin-bottom: 12px;">
+                            
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">${t.resolutionDetail || '裁决说明'}:</label>
+                            <input type="text" id="resolution-detail-${item.orderId}" placeholder="${t.enterSolutionNote || '输入解决方案说明...'}" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; margin-bottom: 16px;">
+                            
+                            <div style="display: flex; gap: 12px;">
+                                <button id="btn-resolve-driver-${item.orderId}" onclick="resolveDisputeForDriver(${item.orderId})" style="flex: 1; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                                    ${window.platformTexts?.resolveForDriver || '司机获胜'}
+                                </button>
+                                <button id="btn-resolve-passenger-${item.orderId}" onclick="resolveDisputeForPassenger(${item.orderId})" style="flex: 1; padding: 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                                    ${window.platformTexts?.resolveForPassenger || '乘客获胜'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 加载并显示争议状态
+            loadDisputeStatus(item.orderId);
+            
+            document.getElementById('detail-modal').classList.add('active');
+        }
+        
+        // 加载争议状态
+        async function loadDisputeStatus(orderId) {
+            if (!window.contracts?.rideOrder) return;
+            
+            try {
+                const disputeStatus = await window.contracts.rideOrder.getDisputeStatus(orderId);
+                const statusDisplay = document.getElementById(`dispute-status-display-${orderId}`);
+                if (!statusDisplay) return;
+                
+                const disputeOpened = disputeStatus.disputeOpened;
+                const disputeResolved = disputeStatus.disputeResolved;
+                const disputeReason = disputeStatus.disputeReason || '';
+                const disputeOpener = disputeStatus.disputeOpener || ethers.constants.AddressZero;
+                const disputeWinner = disputeStatus.disputeWinner || ethers.constants.AddressZero;
+                const disputeOpenedAt = disputeStatus.disputeOpenedAt && disputeStatus.disputeOpenedAt.toNumber ? 
+                    new Date(disputeStatus.disputeOpenedAt.toNumber() * 1000).toLocaleString('zh-CN') : '';
+                const disputeResolvedAt = disputeStatus.disputeResolvedAt && disputeStatus.disputeResolvedAt.toNumber ? 
+                    new Date(disputeStatus.disputeResolvedAt.toNumber() * 1000).toLocaleString('zh-CN') : '';
+                const disputeResolutionDetail = disputeStatus.disputeResolutionDetail || '';
+                
+                let statusHtml = '';
+                if (disputeOpened) {
+                    statusHtml = `
+                        <div style="padding: 12px; background: ${disputeResolved ? '#d1fae5' : '#fef3c7'}; border-radius: 8px; border: 1px solid ${disputeResolved ? '#10b981' : '#fbbf24'};">
+                            <div style="font-weight: 600; color: ${disputeResolved ? '#065f46' : '#92400e'}; margin-bottom: 8px;">
+                                ${disputeResolved ? `✅ ${window.platformTexts?.disputeResolvedDriver || '争议已解决'}` : `⚠️ ${window.platformTexts?.disputes || '争议订单'}`}
+                            </div>
+                            ${disputeReason ? `
+                            <div style="font-size: 14px; color: ${disputeResolved ? '#047857' : '#78350f'}; margin-bottom: 8px;">
+                                <strong>${window.platformTexts?.disputeReason || '争议原因'}:</strong> ${disputeReason}
+                            </div>
+                            ` : ''}
+                            ${disputeOpener !== ethers.constants.AddressZero ? `
+                            <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">
+                                <strong>${window.platformTexts?.openedBy || '发起人'}:</strong> <span style="font-family: monospace;">${disputeOpener.substring(0, 6)}...${disputeOpener.substring(disputeOpener.length - 4)}</span>
+                            </div>
+                            ` : ''}
+                            ${disputeResolved && disputeWinner !== ethers.constants.AddressZero ? `
+                            <div style="font-size: 14px; color: #047857; margin-bottom: 8px;">
+                                <strong>${window.platformTexts?.winner || '获胜方'}:</strong> <span style="font-family: monospace;">${disputeWinner.substring(0, 6)}...${disputeWinner.substring(disputeWinner.length - 4)}</span>
+                            </div>
+                            ` : ''}
+                            ${disputeResolutionDetail ? `
+                            <div style="font-size: 13px; color: #1f2937; margin-top: 8px; padding: 8px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                                <strong>${window.platformTexts?.resolutionDetail || '裁决说明'}:</strong> ${disputeResolutionDetail}
+                            </div>
+                            ` : ''}
+                            ${disputeOpenedAt ? `
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                ${window.platformTexts?.openedAt || '提交时间'}: ${disputeOpenedAt}
+                            </div>
+                            ` : ''}
+                            ${disputeResolvedAt ? `
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                ${window.platformTexts?.resolvedAt || '解决时间'}: ${disputeResolvedAt}
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    statusHtml = `
+                        <div style="padding: 12px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; color: #6b7280;">
+                            ${window.platformTexts?.noDispute || '无争议'}
+                        </div>
+                    `;
+                }
+                
+                statusDisplay.innerHTML = statusHtml;
+                
+                // 如果争议已解决，禁用按钮并恢复按钮文本
+                if (disputeResolved) {
+                    const driverBtn = document.getElementById(`btn-resolve-driver-${orderId}`);
+                    const passengerBtn = document.getElementById(`btn-resolve-passenger-${orderId}`);
+                    const t = window.platformTexts || {};
+                    if (driverBtn) {
+                        driverBtn.disabled = true;
+                        driverBtn.textContent = t.resolveForDriver || '司机获胜';
+                    }
+                    if (passengerBtn) {
+                        passengerBtn.disabled = true;
+                        passengerBtn.textContent = t.resolveForPassenger || '乘客获胜';
+                    }
+                }
+            } catch (error) {
+                console.error('加载争议状态失败:', error);
+            }
+        }
+        
+        // 解决争议（司机获胜）
+        async function resolveDisputeForDriver(orderId) {
+            if (!window.contracts?.rideOrder) {
+                alert('合约未初始化！');
+                return;
+            }
+            
+            // 确保有 signer
+            if (!signer) {
+                try {
+                    if (!provider) {
+                        provider = new ethers.providers.Web3Provider(window.ethereum);
+                    }
+                    signer = provider.getSigner();
+                } catch (error) {
+                    alert('无法获取签名者，请确保已连接钱包');
+                    return;
+                }
+            }
+            
+            let driverAddress = null;
+            let item = null;
+            
+            // 先从 filteredRevenueData 查找
+            if (window.filteredRevenueData) {
+                item = window.filteredRevenueData.find(d => d.orderId === orderId.toString() || d.orderId === orderId);
+                if (item && item.driver) {
+                    driverAddress = item.driver;
+                }
+            }
+            
+            // 如果没找到，从 disputeData 查找
+            if (!driverAddress && typeof disputeData !== 'undefined') {
+                const dispute = disputeData.find(d => d.orderId === orderId.toString() || d.orderId === orderId);
+                if (dispute && dispute.orderDetails && dispute.orderDetails.driver) {
+                    driverAddress = dispute.orderDetails.driver;
+                    item = dispute;
+                }
+            }
+            
+            // 如果还是没找到，直接从合约获取订单信息
+            if (!driverAddress) {
+                try {
+                    const order = await window.contracts.rideOrder.getOrder(orderId);
+                    if (order && order.driver && order.driver !== ethers.constants.AddressZero) {
+                        driverAddress = order.driver;
+                    } else {
+                        alert('无法找到订单信息或订单没有司机');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('获取订单信息失败:', error);
+                    alert('无法找到订单信息: ' + error.message);
+                    return;
+                }
+            }
+            
+            if (!driverAddress) {
+                alert('无法找到司机地址');
+                return;
+            }
+            const detailInput = document.getElementById(`resolution-detail-${orderId}`);
+            const detail = detailInput ? detailInput.value.trim() : 'Resolved for driver';
+            
+            const t = window.platformTexts || {};
+            if (!confirm(`${t.confirmResolveDriver || '确认将争议解决为司机获胜？'}\n${t.driverAddress || '司机地址'}: ${driverAddress}\n${t.description || '说明'}: ${detail}`)) {
+                return;
+            }
+            
+            const btn = document.getElementById(`btn-resolve-driver-${orderId}`);
+            const btnPassenger = document.getElementById(`btn-resolve-passenger-${orderId}`);
+            
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = t.processing || '处理中...';
+                }
+                if (btnPassenger) {
+                    btnPassenger.disabled = true;
+                }
+                
+                // 使用带 signer 的合约实例来发送交易
+                const contractWithSigner = window.contracts.rideOrderWithSigner || window.contracts.rideOrder.connect(signer);
+                if (!contractWithSigner) {
+                    alert('无法获取签名者，请确保已连接钱包');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = t.resolveForDriver || '司机获胜';
+                    }
+                    if (btnPassenger) {
+                        btnPassenger.disabled = false;
+                    }
+                    return;
+                }
+                
+                console.log(`[PLATFORM] 准备解决争议（司机获胜），订单ID: ${orderId}, 司机地址: ${driverAddress}`);
+                const tx = await contractWithSigner.resolveDispute(orderId, driverAddress, detail);
+                console.log(`[PLATFORM] 争议解决交易已发送，哈希: ${tx.hash}`);
+                const receipt = await tx.wait();
+                console.log(`[PLATFORM] 争议解决交易已确认，区块: ${receipt.blockNumber}`);
+                
+                // 争议解决后，立即调用settle函数来分配资金（支付给司机）
+                try {
+                    console.log(`[PLATFORM] 争议已解决（司机获胜），开始结算订单 #${orderId}...`);
+                    const settleTx = await contractWithSigner.settle(orderId);
+                    console.log(`[PLATFORM] 结算交易已发送，哈希: ${settleTx.hash}`);
+                    const settleReceipt = await settleTx.wait();
+                    console.log(`[PLATFORM] 订单 #${orderId} 结算完成，资金已支付给司机，区块: ${settleReceipt.blockNumber}`);
+                } catch (settleError) {
+                    console.error('结算订单失败:', settleError);
+                    window.logger?.error('[PLATFORM] 结算订单失败', {
+                        orderId,
+                        error: settleError.message,
+                        reason: settleError.reason,
+                        code: settleError.code,
+                        stack: settleError.stack
+                    });
+                    // 即使settle失败，也继续执行，因为争议已解决
+                    alert('争议已解决，但结算失败: ' + (settleError.reason || settleError.message) + '\n请手动调用settle函数。');
+                }
+                
+                alert(t.disputeResolvedDriver || '争议已解决（司机获胜），资金已支付给司机');
+                
+                // 刷新争议状态
+                await loadDisputeStatus(orderId);
+                
+                // 刷新收入数据
+                await loadRevenueData();
+                
+                // 恢复按钮状态（争议已解决，按钮应该被禁用或隐藏）
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = t.resolveForDriver || '司机获胜';
+                }
+                if (btnPassenger) {
+                    btnPassenger.disabled = true;
+                }
+            } catch (error) {
+                console.error('解决争议失败:', error);
+                alert('解决争议失败: ' + (error.reason || error.message));
+                
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = t.resolveForDriver || '司机获胜';
+                }
+                if (btnPassenger) {
+                    btnPassenger.disabled = false;
+                }
+            }
+        }
+        
+        // 解决争议（乘客获胜）
+        async function resolveDisputeForPassenger(orderId) {
+            if (!window.contracts?.rideOrder) {
+                alert('合约未初始化！');
+                return;
+            }
+            
+            // 确保有 signer
+            if (!signer) {
+                try {
+                    if (!provider) {
+                        provider = new ethers.providers.Web3Provider(window.ethereum);
+                    }
+                    signer = provider.getSigner();
+                } catch (error) {
+                    alert('无法获取签名者，请确保已连接钱包');
+                    return;
+                }
+            }
+            
+            let passengerAddress = null;
+            let item = null;
+            
+            // 先从 filteredRevenueData 查找（但收入数据中不再有orderDetails，所以直接跳过）
+            // 如果需要从收入数据获取，需要直接从合约获取订单信息
+            
+            // 如果没找到，从 disputeData 查找
+            if (!passengerAddress && typeof disputeData !== 'undefined') {
+                const dispute = disputeData.find(d => d.orderId === orderId.toString() || d.orderId === orderId);
+                if (dispute && dispute.orderDetails && dispute.orderDetails.passenger) {
+                    passengerAddress = dispute.orderDetails.passenger;
+                    item = dispute;
+                }
+            }
+            
+            // 如果还是没找到，直接从合约获取订单信息
+            if (!passengerAddress) {
+                try {
+                    const order = await window.contracts.rideOrder.getOrder(orderId);
+                    if (order && order.passenger) {
+                        passengerAddress = order.passenger;
+                    } else {
+                        alert('无法找到订单信息或订单没有乘客');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('获取订单信息失败:', error);
+                    alert('无法找到订单信息: ' + error.message);
+                    return;
+                }
+            }
+            
+            if (!passengerAddress) {
+                alert('无法找到乘客地址');
+                return;
+            }
+            const detailInput = document.getElementById(`resolution-detail-${orderId}`);
+            const detail = detailInput ? detailInput.value.trim() : 'Resolved for passenger';
+            
+            const t = window.platformTexts || {};
+            if (!confirm(`${t.confirmResolvePassenger || '确认将争议解决为乘客获胜？'}\n${t.passengerAddress || '乘客地址'}: ${passengerAddress}\n${t.description || '说明'}: ${detail}`)) {
+                return;
+            }
+            
+            const btn = document.getElementById(`btn-resolve-passenger-${orderId}`);
+            const btnDriver = document.getElementById(`btn-resolve-driver-${orderId}`);
+            
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = t.processing || '处理中...';
+                }
+                if (btnDriver) {
+                    btnDriver.disabled = true;
+                }
+                
+                // 使用带 signer 的合约实例来发送交易
+                const contractWithSigner = window.contracts.rideOrderWithSigner || window.contracts.rideOrder.connect(signer);
+                if (!contractWithSigner) {
+                    alert('无法获取签名者，请确保已连接钱包');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = t.resolveForPassenger || '乘客获胜';
+                    }
+                    if (btnDriver) {
+                        btnDriver.disabled = false;
+                    }
+                    return;
+                }
+                
+                console.log(`[PLATFORM] 准备解决争议（乘客获胜），订单ID: ${orderId}, 乘客地址: ${passengerAddress}`);
+                const tx = await contractWithSigner.resolveDispute(orderId, passengerAddress, detail);
+                console.log(`[PLATFORM] 争议解决交易已发送，哈希: ${tx.hash}`);
+                const receipt = await tx.wait();
+                console.log(`[PLATFORM] 争议解决交易已确认，区块: ${receipt.blockNumber}`);
+                
+                // 争议解决后，立即调用settle函数来分配资金（退款给乘客）
+                try {
+                    console.log(`[PLATFORM] 争议已解决（乘客获胜），开始结算订单 #${orderId}...`);
+                    const settleTx = await contractWithSigner.settle(orderId);
+                    console.log(`[PLATFORM] 结算交易已发送，哈希: ${settleTx.hash}`);
+                    const settleReceipt = await settleTx.wait();
+                    console.log(`[PLATFORM] 订单 #${orderId} 结算完成，资金已退还给乘客，区块: ${settleReceipt.blockNumber}`);
+                } catch (settleError) {
+                    console.error('结算订单失败:', settleError);
+                    window.logger?.error('[PLATFORM] 结算订单失败', {
+                        orderId,
+                        error: settleError.message,
+                        reason: settleError.reason,
+                        code: settleError.code,
+                        stack: settleError.stack
+                    });
+                    // 即使settle失败，也继续执行，因为争议已解决
+                    alert('争议已解决，但结算失败: ' + (settleError.reason || settleError.message) + '\n请手动调用settle函数。');
+                }
+                
+                alert(t.disputeResolvedPassenger || '争议已解决（乘客获胜），资金已退还给乘客');
+                
+                // 刷新争议状态
+                await loadDisputeStatus(orderId);
+                
+                // 刷新收入数据
+                await loadRevenueData();
+                
+                // 恢复按钮状态（争议已解决，按钮应该被禁用或隐藏）
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = t.resolveForPassenger || '乘客获胜';
+                }
+                if (btnDriver) {
+                    btnDriver.disabled = true;
+                }
+            } catch (error) {
+                console.error('解决争议失败:', error);
+                alert('解决争议失败: ' + (error.reason || error.message));
+                
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = t.resolveForPassenger || '乘客获胜';
+                }
+                if (btnDriver) {
+                    btnDriver.disabled = false;
+                }
+            }
+        }
+        
+        window.resolveDisputeForDriver = resolveDisputeForDriver;
+        window.resolveDisputeForPassenger = resolveDisputeForPassenger;
+
+        // 加载订单统计数据
+        async function loadOrderStatistics() {
+            try {
+                // 使用后端API获取统计数据，避免前端遍历所有订单
+                // 自动检测API地址：如果是通过服务器访问，使用相对路径；否则使用配置的地址
+                let API_BASE_URL = window.API_BASE_URL;
+                if (!API_BASE_URL) {
+                    // 如果当前是通过 http/https 访问，使用相对路径（让代理转发）
+                    // 如果是 file:// 协议直接打开，默认使用 localhost:3000
+                    API_BASE_URL = (window.location.protocol === 'file:') ? 'http://localhost:3000' : '';
+                }
+                const response = await fetch(`${API_BASE_URL}/api/platform/order-statistics`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || '获取统计数据失败');
+                }
+                
+                const data = result.data;
+                
+                // 更新UI
+                document.getElementById('today-total-orders').textContent = data.todayTotalOrders;
+                document.getElementById('today-total-amount').textContent = 
+                    parseFloat(data.todayTotalAmount).toFixed(8) + ' ETH';
+                
+                document.getElementById('active-orders-count').textContent = data.activeOrdersCount;
+                const activeAmountETH = parseFloat(data.activeOrdersAmount);
+                const activePercentage = data.todayTotalOrders > 0 
+                    ? ((data.activeOrdersCount / data.todayTotalOrders) * 100).toFixed(1)
+                    : '0.0';
+                document.getElementById('active-orders-amount').textContent = 
+                    `${activeAmountETH.toFixed(8)} ETH (${activePercentage}%)`;
+                
+                document.getElementById('dispute-orders-count').textContent = data.disputeOrdersCount;
+                const disputeAmountETH = parseFloat(data.disputeOrdersAmount);
+                const disputePercentage = data.todayTotalOrders > 0 
+                    ? ((data.disputeOrdersCount / data.todayTotalOrders) * 100).toFixed(1)
+                    : '0.0';
+                document.getElementById('dispute-orders-amount').textContent = 
+                    `${disputeAmountETH.toFixed(8)} ETH (${disputePercentage}%)`;
+                
+                // 如果只检查了部分订单，显示提示
+                if (data.checkedOrders < data.totalOrders) {
+                    console.log(`📊 统计信息：检查了最近 ${data.checkedOrders} 个订单（共 ${data.totalOrders} 个）`);
+                }
+                    
+            } catch (error) {
+                console.error('加载订单统计数据失败:', error);
+                // 显示错误信息但不阻塞UI
+                const errorMsg = error.message || '加载失败';
+                document.getElementById('today-total-orders').textContent = '-';
+                document.getElementById('today-total-amount').textContent = '-';
+                document.getElementById('active-orders-count').textContent = '-';
+                document.getElementById('active-orders-amount').textContent = '-';
+                document.getElementById('dispute-orders-count').textContent = '-';
+                document.getElementById('dispute-orders-amount').textContent = '-';
+            }
+        }
+        
+        window.loadOrderStatistics = loadOrderStatistics;
+
+        // 加载活跃订单列表
+        async function loadActiveOrders() {
+            if (!window.contracts?.rideOrder) {
+                // 检查是否已连接钱包
+                if (!provider || !account) {
+                    alert('请先连接钱包！');
+                    return;
+                }
+                // 如果已连接钱包但合约未初始化，尝试初始化
+                if (window.contractAddresses?.rideOrder) {
+                    try {
+                        await initializeContracts();
+                        if (!window.contracts?.rideOrder) {
+                            alert('合约初始化失败，请刷新页面重试');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('初始化合约失败:', error);
+                        alert('合约初始化失败: ' + error.message);
+                        return;
+                    }
+                } else {
+                    alert('合约地址未加载，请刷新页面重试');
+                    return;
+                }
+            }
+            
+            const loadingEl = document.getElementById('loading-active');
+            const listEl = document.getElementById('active-orders-list');
+            const emptyEl = document.getElementById('empty-state-active');
+            
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (listEl) listEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+            
+            try {
+                // 验证合约地址
+                const contractAddress = window.contractAddresses?.rideOrder;
+                if (!contractAddress || !ethers.utils.isAddress(contractAddress)) {
+                    throw new Error('无效的合约地址');
+                }
+                
+                // 验证合约是否存在
+                const code = await provider.getCode(contractAddress);
+                if (code === '0x' || code === '0x0') {
+                    throw new Error('合约未部署，请运行: npm run deploy:local');
+                }
+                
+                const orderCount = await window.contracts.rideOrder.orderCount();
+                const activeOrders = [];
+                
+                // 遍历所有订单，找出活跃订单
+                for (let i = 0; i < orderCount.toNumber(); i++) {
+                    try {
+                        const order = await window.contracts.rideOrder.getOrder(i);
+                        const rideStatus = order.rideStatus;
+                        
+                        // 活跃订单：ACCEPTED (2), IN_PROGRESS (3) 或 AWAITING_SETTLEMENT (5)
+                        if (rideStatus === 2 || rideStatus === 3 || rideStatus === 5) {
+                            const statusNames = {
+                                0: 'NONE',
+                                1: 'CREATED',
+                                2: 'ACCEPTED',
+                                3: 'IN_PROGRESS',
+                                4: 'COMPLETED',
+                                5: 'AWAITING_SETTLEMENT',
+                                6: 'SETTLED'
+                            };
+                            
+                            activeOrders.push({
+                                orderId: i,
+                                order: order,
+                                status: statusNames[rideStatus] || 'UNKNOWN',
+                                createdAt: order.createdAt.toNumber() * 1000,
+                                estimatedFare: order.estimatedFare
+                            });
+                        }
+                    } catch (error) {
+                        console.warn(`订单 ${i} 加载失败:`, error);
+                    }
+                }
+                
+                if (loadingEl) loadingEl.style.display = 'none';
+                
+                if (activeOrders.length === 0) {
+                    if (listEl) listEl.style.display = 'none';
+                    if (emptyEl) emptyEl.style.display = 'flex';
+                    return;
+                }
+                
+                // 按创建时间倒序排列
+                activeOrders.sort((a, b) => b.createdAt - a.createdAt);
+                
+                if (listEl) {
+                    listEl.style.display = 'flex';
+                    listEl.innerHTML = activeOrders.map(item => {
+                        const date = new Date(item.createdAt);
+                        const amountETH = parseFloat(ethers.utils.formatEther(item.estimatedFare));
+                        const isZh = getCurrentLang() === 'zh';
+                        const dateLocale = isZh ? 'zh-CN' : 'en-US';
+                        let statusBadge;
+                        if (item.status === 'ACCEPTED') {
+                            statusBadge = `<span class="dispute-status-badge" style="background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6;">${window.platformTexts?.accepted || '已接单'}</span>`;
+                        } else if (item.status === 'IN_PROGRESS') {
+                            statusBadge = `<span class="dispute-status-badge open">${window.platformTexts?.inProgress || '进行中'}</span>`;
+                        } else {
+                            statusBadge = `<span class="dispute-status-badge resolved">${window.platformTexts?.awaitingSettlement || '等待结算'}</span>`;
+                        }
+                        
+                        return `
+                            <div class="revenue-item">
+                                <div class="revenue-header">
+                                    <div>
+                                        <div class="revenue-date">${date.toLocaleString(dateLocale, { 
+                                            year: 'numeric', 
+                                            month: '2-digit', 
+                                            day: '2-digit', 
+                                            hour: '2-digit', 
+                                            minute: '2-digit',
+                                            second: '2-digit'
+                                        })}</div>
+                                        <div style="margin-top: 8px; font-size: 14px; color: #6b7280;">
+                                            ${window.platformTexts?.order || '订单'} #${item.orderId}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        ${statusBadge}
+                                        <div class="revenue-amount" style="margin-top: 8px;">
+                                            ${amountETH.toFixed(8)} ETH
+                                        </div>
+                                        <button class="btn-details" onclick="showActiveOrderDetail(${item.orderId})" style="margin-top: 12px;">
+                                            ${window.platformTexts?.details || '详情'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="revenue-details">
+                                    <div class="detail-item">
+                                        <div class="detail-label">${window.platformTexts?.status || '状态'}</div>
+                                        <div class="detail-value">${item.status}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">${window.platformTexts?.passenger || '乘客'}</div>
+                                        <div class="detail-value address" onclick="copyToClipboard('${item.order.passenger}'); event.stopPropagation();" title="${window.platformTexts?.clickToCopy || '点击复制'}">
+                                            ${item.order.passenger.substring(0, 6)}...${item.order.passenger.substring(38)}
+                                        </div>
+                                    </div>
+                                    ${item.order.driver && item.order.driver !== ethers.constants.AddressZero ? `
+                                    <div class="detail-item">
+                                        <div class="detail-label">${window.platformTexts?.driver || '司机'}</div>
+                                        <div class="detail-value address" onclick="copyToClipboard('${item.order.driver}'); event.stopPropagation();" title="${window.platformTexts?.clickToCopy || '点击复制'}">
+                                            ${item.order.driver.substring(0, 6)}...${item.order.driver.substring(38)}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    <div class="detail-item">
+                                        <div class="detail-label">${window.platformTexts?.pickupLocation || '上车地点'}</div>
+                                        <div class="detail-value">${item.order.pickup.addressText || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                // 存储活跃订单数据供详情使用
+                window.activeOrdersData = activeOrders;
+                
+            } catch (error) {
+                console.error('加载活跃订单失败:', error);
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (emptyEl) {
+                    emptyEl.style.display = 'flex';
+                    emptyEl.innerHTML = `
+                        <div class="empty-state-icon">❌</div>
+                        <div>加载失败: ${error.message}</div>
+                    `;
+                }
+            }
+        }
+        
+        window.loadActiveOrders = loadActiveOrders;
+
+        // 显示活跃订单详情（复用收入详情的模态框）
+        async function showActiveOrderDetail(orderId) {
+            if (!window.contracts?.rideOrder) {
+                alert('合约未初始化！');
+                return;
+            }
+            
+            try {
+                const order = await window.contracts.rideOrder.getOrder(orderId);
+                const ETH_TO_USD_RATE = 2500;
+                
+                // 使用现有的 showDetailModal 函数，但需要找到对应的收入数据索引
+                // 如果没有对应的收入数据，创建一个临时数据
+                const tempItem = {
+                    orderId: orderId.toString(),
+                    driver: order.driver !== ethers.constants.AddressZero ? order.driver : '',
+                    orderDetails: order,
+                    timestamp: order.createdAt.toNumber(),
+                    blockNumber: 0,
+                    transactionHash: 'N/A',
+                    platformFee: ethers.BigNumber.from(0),
+                    driverAmount: ethers.BigNumber.from(0)
+                };
+                
+                // 临时存储到 filteredRevenueData 以便 showDetailModal 使用
+                if (!window.filteredRevenueData) {
+                    window.filteredRevenueData = [];
+                }
+                const tempIndex = window.filteredRevenueData.length;
+                window.filteredRevenueData.push(tempItem);
+                
+                // 调用现有的 showDetailModal
+                showDetailModal(tempIndex);
+                
+            } catch (error) {
+                console.error('加载订单详情失败:', error);
+                alert('加载订单详情失败: ' + error.message);
+            }
+        }
+        
+        window.showActiveOrderDetail = showActiveOrderDetail;
+
+        // Tab 切换函数
+        function switchMainTab(tabName) {
+            // 更新 tab 按钮状态 - 使用 filter-tab 样式
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.background = 'transparent';
+                tab.style.color = '#6b7280';
+                tab.style.fontWeight = '500';
+                tab.style.border = 'none';
+            });
+            
+            const targetTab = document.getElementById(`main-tab-${tabName}`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                targetTab.style.background = 'transparent';
+                targetTab.style.color = '#3b82f6';
+                targetTab.style.fontWeight = '600';
+                targetTab.style.border = 'none';
+            }
+
+            // 更新内容区域
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+                content.style.display = 'none';
+            });
+            
+            const targetContent = document.getElementById(`tab-content-${tabName}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                targetContent.style.display = 'block';
+            }
+
+            // 根据 tab 加载相应数据
+            if (tabName === 'disputes') {
+                loadDisputes();
+            } else if (tabName === 'active') {
+                loadActiveOrders();
+            } else if (tabName === 'revenue') {
+                // 收入数据已经在连接钱包时加载了
+            }
+        }
+
+        window.switchMainTab = switchMainTab;
+
+        // 加载争议订单
+        let disputeData = [];
+        let isLoadingDisputes = false;
+
+        async function loadDisputes() {
+            if (!contracts.rideOrder) {
+                alert('合约未初始化，请刷新页面重试');
+                return;
+            }
+
+            if (isLoadingDisputes) {
+                console.log('⏸️ 争议数据正在加载中，跳过本次请求');
+                return;
+            }
+
+            isLoadingDisputes = true;
+            const loadingEl = document.getElementById('loading-disputes');
+            const listEl = document.getElementById('dispute-list');
+            const emptyEl = document.getElementById('empty-state-disputes');
+
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (listEl) listEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            try {
+                // 查询所有订单的争议状态
+                console.log(`[PLATFORM] [loadDisputes:3150] 开始查询DisputeOpened事件...`);
+                window.logger?.debug('[PLATFORM] 开始查询DisputeOpened事件', { function: 'loadDisputes' });
+                const currentBlock = await provider.getBlockNumber();
+                console.log(`[PLATFORM] [loadDisputes:3151] 当前区块高度: ${currentBlock}`);
+                const disputeOpenedFilter = contracts.rideOrder.filters.DisputeOpened();
+                window.logger?.debug('[PLATFORM] 查询DisputeOpened事件', { fromBlock: 0, toBlock: currentBlock });
+                const disputeOpenedEvents = await contracts.rideOrder.queryFilter(disputeOpenedFilter, 0, currentBlock);
+                console.log(`[PLATFORM] [loadDisputes:3153] 找到 ${disputeOpenedEvents.length} 个DisputeOpened事件`);
+                window.logger?.info('[PLATFORM] 查询到DisputeOpened事件', { count: disputeOpenedEvents.length, events: disputeOpenedEvents.map(e => ({ orderId: e.args.orderId.toString(), blockNumber: e.blockNumber, txHash: e.transactionHash })) });
+
+                const newDisputeData = [];
+
+                for (const event of disputeOpenedEvents) {
+                    const orderId = event.args.orderId.toString();
+                    let orderIdNum = null; // 在循环作用域内声明
+                    
+                    try {
+                        // 获取订单详情（确保使用数字类型）
+                        console.log(`[loadDisputes:3160] 处理订单ID: ${orderId} (类型: ${typeof orderId})`);
+                        orderIdNum = parseInt(orderId, 10);
+                        console.log(`[loadDisputes:3162] 转换后的订单ID: ${orderIdNum} (类型: ${typeof orderIdNum}, isNaN: ${isNaN(orderIdNum)})`);
+                        
+                        if (isNaN(orderIdNum)) {
+                            console.warn(`[loadDisputes:3164] 跳过无效的订单ID: ${orderId}`);
+                            continue;
+                        }
+                        
+                        // 获取合约地址和RPC信息
+                        const contractAddress = window.contractAddresses?.rideOrder || contracts.rideOrder?.address;
+                        let rpcUrl = 'unknown';
+                        try {
+                            if (provider?.connection?.url) {
+                                rpcUrl = provider.connection.url;
+                            } else if (provider?.provider?.connection?.url) {
+                                rpcUrl = provider.provider.connection.url;
+                            } else if (provider?.provider?.rpcUrl) {
+                                rpcUrl = provider.provider.rpcUrl;
+                            } else if (window.ethereum) {
+                                rpcUrl = 'MetaMask Provider';
+                            }
+                        } catch (e) {
+                            rpcUrl = 'unknown';
+                        }
+                        
+                        const functionCall = `getOrder(${orderIdNum})`;
+                        const fullCallInfo = `contract.getOrder(${orderIdNum}) at ${contractAddress} via ${rpcUrl}`;
+                        
+                        console.log(`[PLATFORM] [loadDisputes:3167] 调用 getOrder(${orderIdNum})...`);
+                        console.log(`[PLATFORM] 合约地址: ${contractAddress}`);
+                        console.log(`[PLATFORM] RPC URL: ${rpcUrl}`);
+                        console.log(`[PLATFORM] 完整调用信息: ${fullCallInfo}`);
+                        
+                        // 验证合约实例和函数是否存在
+                        if (!contracts.rideOrder) {
+                            throw new Error('合约实例未初始化 (contracts.rideOrder is null)');
+                        }
+                        
+                        if (!contracts.rideOrder.address) {
+                            throw new Error('合约地址未设置 (contracts.rideOrder.address is null)');
+                        }
+                        
+                        // 检查函数是否存在
+                        if (typeof contracts.rideOrder.getOrder !== 'function') {
+                            const availableFunctions = Object.keys(contracts.rideOrder).filter(key => 
+                                typeof contracts.rideOrder[key] === 'function'
+                            );
+                            throw new Error(`getOrder 函数不存在于合约实例中。可用函数: ${availableFunctions.join(', ')}`);
+                        }
+                        
+                        window.logger?.debug('[PLATFORM] 调用getOrder', { 
+                            orderId: orderIdNum,
+                            contractAddress: contractAddress,
+                            rpcUrl: rpcUrl,
+                            functionCall: functionCall,
+                            fullCallInfo: fullCallInfo,
+                            contractInstanceExists: !!contracts.rideOrder,
+                            contractAddressFromInstance: contracts.rideOrder?.address,
+                            hasGetOrder: typeof contracts.rideOrder.getOrder === 'function'
+                        });
+                        
+                        let orderDetails;
+                        try {
+                            orderDetails = await contracts.rideOrder.getOrder(orderIdNum);
+                            console.log(`[PLATFORM] [loadDisputes:3169] getOrder 成功，订单详情:`, orderDetails);
+                        } catch (getOrderError) {
+                            console.error(`[PLATFORM] [loadDisputes] getOrder 调用失败:`, getOrderError);
+                            window.logger?.error(`[PLATFORM] getOrder 调用失败`, {
+                                orderId: orderIdNum,
+                                error: getOrderError.message,
+                                code: getOrderError.code,
+                                reason: getOrderError.reason,
+                                data: getOrderError.data,
+                                method: getOrderError.method,
+                                stack: getOrderError.stack,
+                                contractAddress,
+                                rpcUrl,
+                                contractInstanceAddress: contracts.rideOrder?.address
+                            });
+                            throw getOrderError; // 重新抛出，让外层catch处理
+                        }
+                        
+                        // 获取争议状态（使用数字类型的订单ID）
+                        console.log(`[PLATFORM] [loadDisputes:3171] 调用 getDisputeStatus(${orderIdNum})...`);
+                        window.logger?.debug('[PLATFORM] 调用getDisputeStatus', { orderId: orderIdNum });
+                        
+                        let disputeStatus;
+                        try {
+                            if (typeof contracts.rideOrder.getDisputeStatus !== 'function') {
+                                throw new Error('getDisputeStatus 函数不存在于合约实例中');
+                            }
+                            disputeStatus = await contracts.rideOrder.getDisputeStatus(orderIdNum);
+                            console.log(`[PLATFORM] [loadDisputes:3173] getDisputeStatus 成功，争议状态:`, disputeStatus);
+                        } catch (getDisputeStatusError) {
+                            console.error(`[PLATFORM] [loadDisputes] getDisputeStatus 调用失败:`, getDisputeStatusError);
+                            window.logger?.error(`[PLATFORM] getDisputeStatus 调用失败`, {
+                                orderId: orderIdNum,
+                                error: getDisputeStatusError.message,
+                                code: getDisputeStatusError.code,
+                                reason: getDisputeStatusError.reason,
+                                data: getDisputeStatusError.data,
+                                method: getDisputeStatusError.method,
+                                stack: getDisputeStatusError.stack,
+                                contractAddress,
+                                rpcUrl
+                            });
+                            // 如果getDisputeStatus失败，使用默认值继续处理
+                            disputeStatus = {
+                                disputeOpened: true,
+                                disputeReason: '无法获取争议状态',
+                                disputeResolved: false,
+                                disputeOpener: event.args.by,
+                                disputeWinner: ethers.constants.AddressZero,
+                                disputeOpenedAt: event.args.timestamp.toNumber(),
+                                disputeResolvedAt: 0,
+                                disputeResolutionDetail: '',
+                                rideStatus: 0
+                            };
+                        }
+                        
+                        // 获取事件块信息
+                        const block = await provider.getBlock(event.blockNumber);
+                        
+                        newDisputeData.push({
+                            orderId: orderId,
+                            openedBy: event.args.by || disputeStatus.disputeOpener,
+                            reason: event.args.reason || disputeStatus.disputeReason,
+                            timestamp: event.args.timestamp && event.args.timestamp.toNumber ? event.args.timestamp.toNumber() : (disputeStatus.disputeOpenedAt && disputeStatus.disputeOpenedAt.toNumber ? disputeStatus.disputeOpenedAt.toNumber() : block.timestamp),
+                            blockNumber: event.blockNumber,
+                            transactionHash: event.transactionHash,
+                            disputeOpened: disputeStatus.disputeOpened,
+                            disputeResolved: disputeStatus.disputeResolved,
+                            disputeWinner: disputeStatus.disputeWinner,
+                            disputeOpenedAt: disputeStatus.disputeOpenedAt && disputeStatus.disputeOpenedAt.toNumber ? disputeStatus.disputeOpenedAt.toNumber() : null,
+                            disputeResolvedAt: disputeStatus.disputeResolvedAt && disputeStatus.disputeResolvedAt.toNumber ? disputeStatus.disputeResolvedAt.toNumber() : null,
+                            disputeResolutionDetail: disputeStatus.disputeResolutionDetail || '',
+                            orderDetails: orderDetails
+                        });
+                    } catch (error) {
+                        console.error(`[PLATFORM] [loadDisputes:3201] 无法获取订单 #${orderId} (数字ID: ${orderIdNum !== null ? orderIdNum : 'N/A'}) 的详情:`, error);
+                        window.logger?.error('[PLATFORM] 获取订单详情失败', { orderId: orderId, orderIdNum: orderIdNum, error: error.message });
+                        console.error(`[PLATFORM] [loadDisputes:3202] 错误详情:`, {
+                            message: error.message,
+                            code: error.code,
+                            reason: error.reason,
+                            data: error.data,
+                            method: error.method,
+                            stack: error.stack
+                        });
+                        // 即使getOrder失败，也尝试使用事件数据创建基本记录
+                        try {
+                            const block = await provider.getBlock(event.blockNumber);
+                            newDisputeData.push({
+                                orderId: orderId,
+                                openedBy: event.args.by || event.args.opener || 'Unknown',
+                                reason: event.args.reason || 'Unknown',
+                                timestamp: event.args.timestamp && event.args.timestamp.toNumber ? event.args.timestamp.toNumber() : block.timestamp,
+                                blockNumber: event.blockNumber,
+                                transactionHash: event.transactionHash,
+                                disputeOpened: true,
+                                disputeResolved: false, // 无法获取，设为false
+                                disputeWinner: null,
+                                disputeOpenedAt: block.timestamp,
+                                disputeResolvedAt: null,
+                                disputeResolutionDetail: '',
+                                orderDetails: null, // getOrder失败，设为null
+                                _error: 'getOrder failed: ' + error.message
+                            });
+                            console.log(`[loadDisputes:3220] 使用事件数据创建基本争议记录 (订单 #${orderId})`);
+                        } catch (fallbackError) {
+                            console.error(`[loadDisputes:3222] 创建基本争议记录也失败:`, fallbackError);
+                        }
+                    }
+                }
+
+                console.log(`[PLATFORM] [loadDisputes:3226] 成功处理 ${newDisputeData.length} 个争议订单 (总事件数: ${disputeOpenedEvents.length})`);
+                window.logger?.info('[PLATFORM] 处理争议数据完成', { 
+                    totalEvents: disputeOpenedEvents.length, 
+                    processedCount: newDisputeData.length,
+                    orderIds: newDisputeData.map(d => d.orderId)
+                });
+                
+                // 按时间排序（最新的在前）
+                newDisputeData.sort((a, b) => b.timestamp - a.timestamp);
+
+                disputeData = newDisputeData;
+                console.log(`[PLATFORM] [loadDisputes:3216] 设置disputeData (${disputeData.length}条)，准备渲染列表`);
+                window.logger?.debug('[PLATFORM] 准备渲染争议列表', { disputeDataCount: disputeData.length });
+                renderDisputeList();
+
+            } catch (error) {
+                console.error('加载争议订单失败:', error);
+                alert('加载争议订单失败: ' + error.message);
+            } finally {
+                isLoadingDisputes = false;
+                if (loadingEl) loadingEl.style.display = 'none';
+            }
+        }
+
+        window.loadDisputes = loadDisputes;
+
+        // 渲染争议订单列表
+        function renderDisputeList() {
+            console.log(`[PLATFORM] [renderDisputeList] 开始渲染，disputeData长度: ${disputeData?.length || 0}`);
+            window.logger?.debug('[PLATFORM] 开始渲染争议列表', { disputeDataCount: disputeData?.length || 0, disputeData: disputeData });
+            
+            const container = document.getElementById('dispute-list');
+            const emptyState = document.getElementById('empty-state-disputes');
+            const statusFilter = document.getElementById('dispute-status-filter')?.value || 'all';
+
+            if (!container) {
+                console.warn('[PLATFORM] [renderDisputeList] 容器元素不存在');
+                window.logger?.warn('[PLATFORM] 争议列表容器不存在');
+                return;
+            }
+
+            // 应用状态筛选
+            let filteredData = disputeData || [];
+            if (statusFilter === 'open') {
+                filteredData = filteredData.filter(d => d.disputeOpened && !d.disputeResolved);
+            } else if (statusFilter === 'resolved') {
+                filteredData = filteredData.filter(d => d.disputeResolved);
+            }
+
+            console.log(`[PLATFORM] [renderDisputeList] 筛选后数据长度: ${filteredData.length} (筛选条件: ${statusFilter})`);
+            window.logger?.debug('[PLATFORM] 筛选争议数据', { filteredCount: filteredData.length, statusFilter: statusFilter });
+            
+            if (filteredData.length === 0) {
+                console.log(`[PLATFORM] [renderDisputeList] 没有争议数据，显示空状态`);
+                window.logger?.info('[PLATFORM] 没有争议数据可显示', { statusFilter: statusFilter, totalCount: disputeData?.length || 0 });
+                container.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'flex';
+                return;
+            }
+
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            if (emptyState) emptyState.style.display = 'none';
+
+            container.innerHTML = filteredData.map((item, index) => {
+                const date = new Date(item.timestamp * 1000);
+                const isResolved = item.disputeResolved;
+                const statusClass = isResolved ? 'dispute-resolved' : 'dispute-open';
+                const statusBadge = isResolved 
+                    ? `<span class="dispute-status-badge resolved">${window.platformTexts?.resolved || '已解决'}</span>`
+                    : `<span class="dispute-status-badge open">${window.platformTexts?.open || '待处理'}</span>`;
+
+                // 获取订单状态信息
+                let orderStatus = 'Unknown';
+                if (item.orderDetails) {
+                    const status = typeof item.orderDetails.status === 'number' 
+                        ? item.orderDetails.status 
+                        : (item.orderDetails.status?.toNumber ? item.orderDetails.status.toNumber() : 0);
+                    const statusNames = ['Pending', 'Accepted', 'Picked Up', 'Completed', 'Cancelled'];
+                    orderStatus = statusNames[status] || 'Unknown';
+                }
+
+                return `
+                    <div class="dispute-item ${statusClass}">
+                        <div class="dispute-header">
+                            <div>
+                                <div class="revenue-date">${date.toLocaleString('zh-CN', { 
+                                    year: 'numeric', 
+                                    month: '2-digit', 
+                                    day: '2-digit', 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                })}</div>
+                                <div class="dispute-order-id" style="margin-top: 8px;">
+                                    ${window.platformTexts?.order || '订单'} #${item.orderId}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                ${statusBadge}
+                                <button class="btn-details" onclick="showDisputeDetail('${item.orderId}')" style="margin-top: 12px;">
+                                    ${window.platformTexts?.details || '详情'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dispute-info">
+                            <div class="dispute-info-item">
+                                <div class="dispute-info-label">${window.platformTexts?.openedBy || '发起人'}</div>
+                                <div class="dispute-info-value address" onclick="copyToClipboard('${item.openedBy}'); event.stopPropagation();" title="${window.platformTexts?.clickToCopy || '点击复制'}">
+                                    ${item.openedBy.substring(0, 6)}...${item.openedBy.substring(38)}
+                                </div>
+                            </div>
+                            <div class="dispute-info-item">
+                                <div class="dispute-info-label">${window.platformTexts?.orderStatus || '订单状态'}</div>
+                                <div class="dispute-info-value">${orderStatus}</div>
+                            </div>
+                            ${isResolved ? `
+                            <div class="dispute-info-item">
+                                <div class="dispute-info-label">${window.platformTexts?.winner || '获胜方'}</div>
+                                <div class="dispute-info-value address" onclick="copyToClipboard('${item.disputeWinner}'); event.stopPropagation();" title="${window.platformTexts?.clickToCopy || '点击复制'}">
+                                    ${item.disputeWinner && item.disputeWinner !== ethers.constants.AddressZero 
+                                        ? item.disputeWinner.substring(0, 6) + '...' + item.disputeWinner.substring(38)
+                                        : window.platformTexts?.notSet || '未设置'}
+                                </div>
+                            </div>
+                            ` : ''}
+                            <div class="dispute-info-item">
+                                <div class="dispute-info-label">${window.platformTexts?.txHash || '交易哈希'}</div>
+                                <div class="dispute-info-value address" onclick="copyToClipboard('${item.transactionHash}'); event.stopPropagation();" title="${window.platformTexts?.clickToCopy || '点击复制'}">
+                                    ${item.transactionHash.substring(0, 10)}...${item.transactionHash.substring(58)}
+                                </div>
+                            </div>
+                        </div>
+                        ${item.reason ? `
+                        <div class="dispute-reason">
+                            <div class="dispute-reason-label">${window.platformTexts?.disputeReason || '争议原因'}</div>
+                            <div class="dispute-reason-text">${item.reason}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.showDisputeDetail = function(orderId) {
+            // 使用现有的详情模态框显示争议订单详情
+            const dispute = disputeData.find(d => d.orderId === orderId.toString());
+            if (!dispute) {
+                alert('未找到该争议订单');
+                return;
+            }
+
+            // 调用现有的 showDetailModal 函数，传入订单ID
+            // 注意：这里需要确保 showDetailModal 能处理争议订单
+            showDetailModal(dispute.orderId);
+        };
+
+        // 关闭详情模态框
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制: ' + text);
+            });
+        }
+
+        // 导出数据
+        async function exportData() {
+            if (!window.filteredRevenueData || window.filteredRevenueData.length === 0) {
+                alert('没有可导出的数据');
+                return;
+            }
+            
+            try {
+                // 准备订单数据
+                const ordersData = window.filteredRevenueData.map(item => {
+                    const date = new Date(item.timestamp * 1000);
+                    const platformFeeETH = ethers.utils.formatEther(item.platformFee);
+                    const orderAmount = item.driverAmount.add(item.platformFee);
+                    const orderAmountETH = ethers.utils.formatEther(orderAmount);
+                    
+                    return {
+                        orderId: item.orderId,
+                        date: date.toISOString(),
+                        dateString: date.toLocaleDateString('zh-CN'),
+                        timeString: date.toLocaleTimeString('zh-CN'),
+                        timestamp: item.timestamp,
+                        platformFeeETH: parseFloat(platformFeeETH).toFixed(8),
+                        platformFeeUSD: (parseFloat(platformFeeETH) * ETH_TO_USD_RATE).toFixed(2),
+                        driverAddress: item.driver,
+                        orderAmountETH: parseFloat(orderAmountETH).toFixed(8),
+                        orderAmountUSD: (parseFloat(orderAmountETH) * ETH_TO_USD_RATE).toFixed(2),
+                        transactionHash: item.transactionHash,
+                        blockNumber: item.blockNumber || 0,
+                        orderDetails: item.orderDetails || null
+                    };
+                });
+                
+                // 调用后端API保存JSON文件
+                const response = await fetch('/api/platform/save-orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orders: ordersData })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`订单记录已保存成功！\n文件名: ${result.data.filename}\n订单数: ${result.data.totalOrders}`);
+                } else {
+                    alert('保存失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('导出数据失败:', error);
+                alert('导出数据失败: ' + error.message);
+            }
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('detail-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'detail-modal') {
+                closeDetailModal();
+            }
+        });
+
+        // 搜索框实时筛选
+        document.getElementById('search-input')?.addEventListener('input', renderRevenueList);
+        document.getElementById('start-date')?.addEventListener('change', renderRevenueList);
+        document.getElementById('end-date')?.addEventListener('change', renderRevenueList);
+    </script>
+</body>
+</html>
+

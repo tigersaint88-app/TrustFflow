@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设计系统示例 - TrustFlow</title>
+    <link rel="stylesheet" href="design-system.css">
+    <style>
+        /* 示例特定样式 */
+        .example-section {
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .example-title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
+            color: var(--gray-900);
+        }
+        
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        
+        .code-block {
+            background: var(--gray-900);
+            color: var(--gray-100);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: var(--font-size-sm);
+            overflow-x: auto;
+            margin-top: var(--spacing-md);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 style="margin: 0; font-size: var(--font-size-xl);">TrustFlow</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#buttons" class="sidebar-nav-item active">
+                    <span class="sidebar-nav-item-icon">🔘</span>
+                    按钮
+                </a>
+                <a href="#forms" class="sidebar-nav-item">
+                    <span class="sidebar-nav-item-icon">📝</span>
+                    表单
+                </a>
+                <a href="#badges" class="sidebar-nav-item">
+                    <span class="sidebar-nav-item-icon">🏷️</span>
+                    徽章
+                </a>
+                <a href="#cards" class="sidebar-nav-item">
+                    <span class="sidebar-nav-item-icon">📦</span>
+                    卡片
+                </a>
+                <a href="#interactions" class="sidebar-nav-item">
+                    <span class="sidebar-nav-item-icon">⚡</span>
+                    交互
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 顶部标题栏 -->
+            <header class="top-header">
+                <h1 class="top-header-title">设计系统示例</h1>
+                <div class="top-header-actions">
+                    <button class="btn btn-primary" onclick="window.toast.success('操作成功！')">
+                        测试 Toast
+                    </button>
+                </div>
+            </header>
+            
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 按钮示例 -->
+                <section id="buttons" class="example-section">
+                    <h2 class="example-title">按钮组件</h2>
+                    <div class="example-grid">
+                        <div class="card">
+                            <h3 class="card-title">Primary 按钮</h3>
+                            <div class="card-body">
+                                <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                                    <button class="btn btn-primary">主要操作</button>
+                                    <button class="btn btn-primary" disabled>禁用状态</button>
+                                    <button class="btn btn-primary btn-sm">小尺寸</button>
+                                    <button class="btn btn-primary btn-lg">大尺寸</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="card-title">Secondary 按钮</h3>
+                            <div class="card-body">
+                                <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                                    <button class="btn btn-secondary">次要操作</button>
+                                    <button class="btn btn-secondary" disabled>禁用状态</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="card-title">Ghost 按钮</h3>
+                            <div class="card-body">
+                                <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                                    <button class="btn btn-ghost">取消</button>
+                                    <button class="btn btn-ghost" disabled>禁用状态</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 表单示例 -->
+                <section id="forms" class="example-section">
+                    <h2 class="example-title">表单组件</h2>
+                    <div class="card">
+                        <h3 class="card-title">带图标的输入框</h3>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">地址</label>
+                                <div class="form-input-wrapper">
+                                    <span class="form-input-icon" id="location-icon"></span>
+                                    <input type="text" class="form-input" placeholder="请输入地址">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">搜索</label>
+                                <div class="form-input-wrapper">
+                                    <span class="form-input-icon" id="search-icon"></span>
+                                    <input type="text" class="form-input" placeholder="搜索订单、用户...">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">选择状态</label>
+                                <select class="form-select">
+                                    <option>请选择</option>
+                                    <option>CREATED</option>
+                                    <option>ACCEPTED</option>
+                                    <option>IN_PROGRESS</option>
+                                    <option>COMPLETED</option>
+                                    <option>SETTLED</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 徽章示例 -->
+                <section id="badges" class="example-section">
+                    <h2 class="example-title">状态徽章</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap; align-items: center;">
+                                <span class="badge badge-created">CREATED</span>
+                                <span class="badge badge-accepted">ACCEPTED</span>
+                                <span class="badge badge-in-progress">IN_PROGRESS</span>
+                                <span class="badge badge-completed">COMPLETED</span>
+                                <span class="badge badge-settled">SETTLED</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 卡片示例 -->
+                <section id="cards" class="example-section">
+                    <h2 class="example-title">卡片组件</h2>
+                    <div class="example-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">订单信息</h3>
+                                <p class="card-subtitle">订单 #12345</p>
+                            </div>
+                            <div class="card-body">
+                                <p style="margin: 0 0 var(--spacing-md) 0;">从：北京市朝阳区</p>
+                                <p style="margin: 0 0 var(--spacing-md) 0;">到：北京市海淀区</p>
+                                <p style="margin: 0;">
+                                    <span class="badge badge-in-progress">IN_PROGRESS</span>
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-ghost">查看详情</button>
+                                <button class="btn btn-primary">确认</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">用户信息</h3>
+                                <p class="card-subtitle">司机账户</p>
+                            </div>
+                            <div class="card-body">
+                                <p style="margin: 0 0 var(--spacing-md) 0;">总行程：125 次</p>
+                                <p style="margin: 0 0 var(--spacing-md) 0;">总收入：1,234.56 ETH</p>
+                                <p style="margin: 0;">评分：4.8 ⭐</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">结算信息</h3>
+                                <p class="card-subtitle">今日统计</p>
+                            </div>
+                            <div class="card-body">
+                                <p style="margin: 0 0 var(--spacing-md) 0;">订单数：12</p>
+                                <p style="margin: 0 0 var(--spacing-md) 0;">平台费：1.2 ETH</p>
+                                <p style="margin: 0;">
+                                    <span class="badge badge-settled">SETTLED</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 交互示例 -->
+                <section id="interactions" class="example-section">
+                    <h2 class="example-title">交互组件</h2>
+                    <div class="example-grid">
+                        <div class="card">
+                            <h3 class="card-title">Toast 通知</h3>
+                            <div class="card-body">
+                                <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                                    <button class="btn btn-primary" onclick="window.toast.success('操作成功！')">
+                                        成功
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="window.toast.error('操作失败！')">
+                                        错误
+                                    </button>
+                                    <button class="btn btn-ghost" onclick="window.toast.warning('请注意！')">
+                                        警告
+                                    </button>
+                                    <button class="btn btn-ghost" onclick="window.toast.info('这是一条信息')">
+                                        信息
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="card-title">Modal 模态框</h3>
+                            <div class="card-body">
+                                <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                                    <button class="btn btn-primary" onclick="showExampleModal()">
+                                        显示模态框
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="showConfirmModal()">
+                                        确认对话框
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="card-title">Loading 加载</h3>
+                            <div class="card-body">
+                                <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                                    <button class="btn btn-primary" onclick="showLoading()">
+                                        显示加载
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="testAsyncOperation()">
+                                        测试异步操作
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 移动端侧边栏遮罩 -->
+    <div class="sidebar-overlay"></div>
+    
+    <script src="icons.js"></script>
+    <script src="design-system.js"></script>
+    <script>
+        // 设置图标
+        document.getElementById('location-icon').innerHTML = window.getIcon('location');
+        document.getElementById('search-icon').innerHTML = window.getIcon('search');
+        
+        // 示例：显示模态框
+        function showExampleModal() {
+            window.modalManager.show({
+                title: '示例模态框',
+                content: `
+                    <p>这是一个模态框示例。</p>
+                    <p>可以在这里显示任何内容。</p>
+                `,
+                buttons: [
+                    {
+                        label: '取消',
+                        type: 'ghost',
+                        onClick: () => console.log('取消')
+                    },
+                    {
+                        label: '确认',
+                        type: 'primary',
+                        onClick: () => {
+                            window.toast.success('已确认！');
+                        }
+                    }
+                ]
+            });
+        }
+        
+        // 示例：确认对话框
+        function showConfirmModal() {
+            window.modalManager.confirm(
+                '确定要执行此操作吗？此操作不可撤销。',
+                () => {
+                    window.toast.success('操作已确认！');
+                },
+                () => {
+                    window.toast.info('操作已取消');
+                }
+            );
+        }
+        
+        // 示例：显示加载
+        function showLoading() {
+            window.loadingManager.show('加载中...');
+            setTimeout(() => {
+                window.loadingManager.hide();
+                window.toast.success('加载完成！');
+            }, 2000);
+        }
+        
+        // 示例：异步操作包装器
+        async function testAsyncOperation() {
+            await window.withLoadingAndToast(
+                async () => {
+                    // 模拟异步操作
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return { success: true };
+                },
+                {
+                    loadingMessage: '正在处理订单...',
+                    successMessage: '订单处理成功！',
+                    errorMessage: '订单处理失败',
+                    onSuccess: (result) => {
+                        console.log('成功:', result);
+                    }
+                }
+            );
+        }
+        
+        // 侧边栏导航点击处理
+        document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = item.getAttribute('href');
+                if (targetId) {
+                    document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    const target = document.querySelector(targetId);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,107 @@
+# 环境变量配置模板
+# 复制此文件为 .env 并填写实际值
+
+# ==================== 区块链配置 ====================
+# RPC节点URL（可使用公共节点或自己的节点）
+RPC_URL=https://polygon-rpc.com
+CHAIN_ID=137
+
+# ==================== 合约地址 ====================
+# 部署后填写实际的合约地址
+PAYMENT_ESCROW_ADDRESS=
+RIDE_ORDER_ADDRESS=
+USER_REGISTRY_ADDRESS=
+RATING_SYSTEM_ADDRESS=
+DISPUTE_RESOLUTION_ADDRESS=
+
+# ==================== 部署配置 ====================
+# 部署账户私钥（⚠️ 请妥善保管，不要泄露）
+DEPLOYER_PRIVATE_KEY=
+
+# 其他测试网RPC URL（可选）
+MUMBAI_RPC_URL=https://rpc-mumbai.maticvigil.com
+BSC_TESTNET_RPC_URL=https://data-seed-prebsc-1-s1.binance.org:8545
+
+# 区块链浏览器API Key（用于验证合约）
+POLYGONSCAN_API_KEY=
+BSCSCAN_API_KEY=
+
+# ==================== Redis配置 ====================
+REDIS_URL=redis://localhost:6379
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# ==================== IPFS配置 ====================
+# 本地IPFS节点
+IPFS_URL=http://localhost:5001
+
+# 或使用Infura IPFS（可选）
+# IPFS_URL=https://ipfs.infura.io:5001
+
+# ==================== 服务端口配置 ====================
+WS_PORT=8080
+API_PORT=3000
+
+# ==================== 业务配置 ====================
+# 订单匹配最大距离（公里）
+MAX_MATCHING_DISTANCE=10
+
+# 最多推送司机数量
+MAX_MATCHED_DRIVERS=10
+
+# 订单超时时间（毫秒，30分钟）
+ORDER_TIMEOUT=1800000
+
+# 位置更新间隔（毫秒）
+LOCATION_UPDATE_INTERVAL=5000
+
+# 到达容忍距离（公里）
+ARRIVAL_TOLERANCE=0.2
+
+# 初始订单ID（订单ID从此值开始递增，默认10000）
+INITIAL_ORDER_ID=10000
+
+# ==================== 安全配置 ====================
+# JWT密钥（用于用户认证）
+JWT_SECRET=your-super-secret-jwt-key-please-change-this-in-production
+
+# JWT过期时间
+JWT_EXPIRES_IN=7d
+
+# ==================== 日志配置 ====================
+LOG_LEVEL=info
+LOG_FILE=./logs/app.log
+
+# ==================== 前端环境变量 ====================
+# API服务地址
+REACT_APP_API_URL=http://localhost:3000
+
+# WebSocket服务地址
+REACT_APP_WS_URL=ws://localhost:8080
+
+# 合约地址（前端使用）
+REACT_APP_PAYMENT_ESCROW_ADDRESS=
+REACT_APP_RIDE_ORDER_ADDRESS=
+REACT_APP_USER_REGISTRY_ADDRESS=
+REACT_APP_RATING_SYSTEM_ADDRESS=
+REACT_APP_DISPUTE_RESOLUTION_ADDRESS=
+
+# 地图API Key（根据使用的地图服务）
+REACT_APP_MAP_API_KEY=
+
+# ==================== 可选配置 ====================
+# 是否创建测试订单（初始化时）
+CREATE_TEST_ORDER=false
+
+# 开发模式
+NODE_ENV=development
+
+
+
+
+
+
+
+
+

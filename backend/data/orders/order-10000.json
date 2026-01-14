@@ -1,0 +1,132 @@
+{
+  "orderId": 10000,
+  "createdAt": 1767583261,
+  "history": [
+    {
+      "timestamp": 1767583254507,
+      "status": 0,
+      "rideStatus": 1,
+      "event": "OrderCreated",
+      "data": {
+        "passenger": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+      }
+    },
+    {
+      "timestamp": 1767583254513,
+      "event": "OrderCreated",
+      "data": {
+        "timestamp": 1767583261,
+        "blockNumber": 11,
+        "transactionHash": "0x9a4c6bc1b4a1f13a50014c704972d893fb7ac6b2aabd4d362d57cc9b5d1d814f",
+        "description": "订单创建",
+        "passenger": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+      }
+    },
+    {
+      "timestamp": 1767583270529,
+      "status": 1,
+      "rideStatus": 2,
+      "event": "OrderAccepted",
+      "data": {
+        "driver": "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
+      }
+    },
+    {
+      "timestamp": 1767583270531,
+      "event": "OrderAccepted",
+      "data": {
+        "timestamp": 1767583275,
+        "blockNumber": 12,
+        "transactionHash": "0x2aca0c01a9b535d1f7a0acd170c61d471ac3c4a4d3f7a42239aee3e70b7074ed",
+        "description": "司机接单",
+        "driver": "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
+      }
+    },
+    {
+      "timestamp": 1767583282541,
+      "status": 2,
+      "rideStatus": 3,
+      "event": "RideStarted",
+      "data": {}
+    },
+    {
+      "timestamp": 1767583282544,
+      "event": "RideStarted",
+      "data": {
+        "timestamp": 1767583287,
+        "blockNumber": 13,
+        "transactionHash": "0x838e4c5524fe6bfc625c820f77111ac727ff8d96a8e7e46e679f770a90256d8e",
+        "description": "开始接到客人"
+      }
+    },
+    {
+      "timestamp": 1767583338598,
+      "status": 3,
+      "rideStatus": 5,
+      "event": "DisputeOpened",
+      "data": {
+        "by": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+        "reason": "some reasons"
+      }
+    },
+    {
+      "timestamp": 1767583338600,
+      "event": "DisputeOpened",
+      "data": {
+        "timestamp": 1767583344,
+        "blockNumber": 15,
+        "transactionHash": "0x7394b337b89df76fcdb23fdce721ae5f44b7b8cddc0eae3e3a1c207d13062ada",
+        "description": "争议开启",
+        "by": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+        "reason": "some reasons"
+      }
+    },
+    {
+      "timestamp": 1767583410705,
+      "event": "DisputeResolved",
+      "data": {
+        "timestamp": 1767583415,
+        "blockNumber": 16,
+        "transactionHash": "0x35225a8aa65e00f72d74f24878774cd2ae88e9a67efb8f137865ca899ade25e8",
+        "description": "争议已解决",
+        "winner": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+        "detail": ""
+      }
+    }
+  ],
+  "passenger": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+  "driver": "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199",
+  "pickup": {
+    "latitude": 39900000,
+    "longitude": 116400000,
+    "addressText": "Tiananmen Square"
+  },
+  "destination": {
+    "latitude": 40000000,
+    "longitude": 116400000,
+    "addressText": "National Stadium (Bird's Nest)"
+  },
+  "category": "rental",
+  "subCategory": "rental car",
+  "estimatedFare": "0.0161",
+  "actualFare": null,
+  "status": 3,
+  "rideStatus": 5,
+  "acceptedAt": 1767583275,
+  "pickedUpAt": 1767583287,
+  "completedAt": 1767583307,
+  "startTimestamp": 1767583287,
+  "endTimestamp": 1767583307,
+  "ipfsHash": "",
+  "disputeOpened": true,
+  "disputeReason": "some reasons",
+  "disputeResolved": true,
+  "disputeWinner": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+  "disputeTimestamp": null,
+  "event": "DisputeResolved",
+  "eventData": {
+    "winner": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    "detail": ""
+  },
+  "updatedAt": 1767583410706
+}

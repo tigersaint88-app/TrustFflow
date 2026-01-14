@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加 Hardhat 本地网络到 MetaMask</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .info h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .network-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .network-info strong {
+            display: inline-block;
+            width: 120px;
+            color: #666;
+        }
+        button {
+            background: #f6851b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #e5750f;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        #status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+            display: block;
+        }
+        #status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+            display: block;
+        }
+        #status.info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border-left: 4px solid #2196f3;
+            display: block;
+        }
+        .steps {
+            margin-top: 20px;
+        }
+        .steps ol {
+            padding-left: 20px;
+        }
+        .steps li {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 添加 Hardhat 本地网络</h1>
+        
+        <div class="info">
+            <h3>使用说明</h3>
+            <p>此工具将自动添加 Hardhat 本地开发网络到您的 MetaMask 钱包。</p>
+            <p><strong>重要：</strong>请确保 Hardhat 节点正在运行（<code>npm run node</code>）</p>
+        </div>
+
+        <div class="network-info">
+            <div><strong>网络名称:</strong> Hardhat Localhost</div>
+            <div><strong>RPC URL:</strong> http://127.0.0.1:8545</div>
+            <div><strong>Chain ID:</strong> 1337 (0x539)</div>
+            <div><strong>货币符号:</strong> ETH</div>
+        </div>
+
+        <button id="addBtn" onclick="addNetwork()">✨ 添加到 MetaMask</button>
+
+        <div id="status"></div>
+
+        <div class="steps">
+            <h3>手动添加步骤（如果自动添加失败）</h3>
+            <ol>
+                <li>打开 MetaMask</li>
+                <li>点击网络选择器（顶部显示网络名称的地方）</li>
+                <li>点击 "添加网络" 或 "Add Network"</li>
+                <li>选择 "手动添加网络" 或 "Add a network manually"</li>
+                <li>填写上述网络信息</li>
+                <li>点击 "保存"</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function addNetwork() {
+            const btn = document.getElementById('addBtn');
+            const status = document.getElementById('status');
+            
+            // 检查 MetaMask 是否安装
+            if (typeof window.ethereum === 'undefined') {
+                status.className = 'error';
+                status.innerHTML = '❌ <strong>未检测到 MetaMask</strong><br>请先安装 MetaMask 浏览器扩展：<a href="https://metamask.io/" target="_blank">https://metamask.io/</a>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '处理中...';
+            status.className = 'info';
+            status.innerHTML = '⏳ 正在添加网络到 MetaMask...';
+
+            try {
+                // 尝试添加网络
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: '0x539', // 1337 的十六进制
+                        chainName: 'Hardhat Localhost',
+                        nativeCurrency: {
+                            name: 'ETH',
+                            symbol: 'ETH',
+                            decimals: 18
+                        },
+                        rpcUrls: ['http://127.0.0.1:8545'],
+                        blockExplorerUrls: null
+                    }]
+                });
+
+                status.className = 'success';
+                status.innerHTML = '✅ <strong>成功！</strong><br>Hardhat 本地网络已添加到 MetaMask。请检查 MetaMask 是否已切换到新网络。';
+                
+                // 尝试切换网络
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x539' }]
+                    });
+                } catch (switchError) {
+                    // 如果切换失败，可能网络已添加但未切换，这是正常的
+                    console.log('网络已添加，但可能需要手动切换');
+                }
+
+            } catch (error) {
+                console.error('添加网络失败:', error);
+                
+                let errorMsg = '❌ <strong>添加失败</strong><br>';
+                
+                if (error.code === 4902) {
+                    errorMsg += '网络已存在，但可能配置不同。请手动检查网络设置。';
+                } else if (error.code === 4001) {
+                    errorMsg += '您拒绝了添加网络的请求。请重试并点击 "批准"。';
+                } else if (error.message.includes('network')) {
+                    errorMsg += '网络错误：' + error.message + '<br>请确保 Hardhat 节点正在运行（<code>npm run node</code>）';
+                } else {
+                    errorMsg += error.message || '未知错误。请尝试手动添加网络。';
+                }
+                
+                status.className = 'error';
+                status.innerHTML = errorMsg;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✨ 添加到 MetaMask';
+            }
+        }
+
+        // 页面加载时检查 MetaMask
+        window.addEventListener('load', () => {
+            if (typeof window.ethereum === 'undefined') {
+                document.getElementById('status').className = 'error';
+                document.getElementById('status').innerHTML = '⚠️ <strong>未检测到 MetaMask</strong><br>请先安装并解锁 MetaMask 钱包。';
+                document.getElementById('status').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+
