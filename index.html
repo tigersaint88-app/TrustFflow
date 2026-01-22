@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="TrustFlow — a trust-minimized coordination protocol for real-world workflows on Ethereum." />
-  <title>TrustFlow — Trust-Minimized Workflow Coordination on Ethereum</title>
+  <meta name="description" content="TrustFlow — a protocol for turning real-world actions into on-chain truth. Verifiable execution → on-chain settlement." />
+  <title>TrustFlow — Turning Real-World Actions into On-Chain Truth</title>
 
   <style>
     :root{
@@ -185,7 +185,7 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>TrustFlow</h1>
-          <p>Trust-minimized workflow coordination on Ethereum</p>
+          <p>Turn real-world actions into on-chain truth</p>
         </div>
       </div>
 
@@ -202,11 +202,11 @@
     <section class="hero" id="overview">
       <div class="panel">
         <div class="kicker"><span class="dot"></span><span>Protocol / Coordination Layer</span></div>
-        <h2>TrustFlow brings trust-minimized coordination to real-world workflows—powered by Ethereum.</h2>
+        <h2>TrustFlow turns real-world actions into on-chain truth—so smart contracts can settle on outcomes, not promises.</h2>
         <p class="subtitle">
-          Many real-world processes (multi-party approvals, contractual execution, compliance workflows, inter-organizational collaboration)
-          still rely on centralized platforms or off-chain trust. TrustFlow defines a protocol layer to represent workflows as verifiable state
-          machines and anchor critical transitions on-chain.
+          Most real-world processes (service delivery, asset handoff, approvals, compliance, inter-org coordination) still rely on centralized platforms
+          to interpret what happened. TrustFlow defines a protocol layer to model workflows as <strong>verifiable state machines</strong>, collect
+          deterministic evidence off-chain, and anchor finalized state commitments on-chain—so settlement can be trust-minimized.
         </p>
 
         <div class="ctaRow">
@@ -247,19 +247,19 @@
           <div class="kv">
             <div class="k">Status</div>
             <div class="v">
-              Demo available (private preview): a car-rental workflow simulated with three browsers (Passenger, Driver, Platform),
-              demonstrating end-to-end fund movement across event-driven states.
+              Demo available: a car-rental workflow simulated with three browsers (Passenger, Driver, Platform),
+              demonstrating verifiable execution, dispute handling, and end-to-end fund settlement across event-driven states.
             </div>
           </div>
 
           <div class="kv">
             <div class="k">Goal</div>
-            <div class="v">A reusable protocol layer to coordinate off-chain workflows with on-chain guarantees.</div>
+            <div class="v">A reusable protocol layer for verifiable execution: off-chain actions → provable state → on-chain settlement.</div>
           </div>
 
           <div class="kv">
             <div class="k">Primary chain</div>
-            <div class="v">Ethereum (L1/L2 compatible by design)</div>
+            <div class="v">Ethereum (L1/L2) and compatible EVM chains by design</div>
           </div>
 
           <p class="small" style="margin:10px 2px 0">
@@ -273,25 +273,26 @@
       <div class="card" id="problem">
         <h3>Problem</h3>
         <p>
-          Critical workflows across organizations still depend on centralized platforms, manual approvals, and opaque audit trails.
-          Smart contracts secure on-chain execution, but do not provide a standard abstraction to represent, validate, and enforce
-          complex off-chain workflow states.
+          Economic workflows across parties still depend on centralized platforms to decide what counts as "done".
+          Smart contracts secure on-chain execution, but they cannot natively observe real-world progress, evidence, or disputes.
+          The result: Web2 trust assumptions reappear on top of Web3 settlement rails.
         </p>
       </div>
 
       <div class="card" id="solution">
         <h3>Solution</h3>
         <p>
-          TrustFlow models workflows as verifiable state machines and anchors key transitions to Ethereum. This enables trust-minimized
-          coordination across parties—without relying on a single centralized intermediary to enforce rules.
+          TrustFlow models workflows as verifiable state machines, verifies transitions off-chain using deterministic rules + evidence,
+          and anchors finalized commitments on-chain. This enables trust-minimized coordination and settlement—without a single party
+          owning the state interpretation layer.
         </p>
       </div>
 
       <div class="card">
         <h3>Outcomes</h3>
         <p>
-          Stronger guarantees for multi-party agreements, improved auditability, and composable primitives that developers can embed into
-          smart contracts and applications.
+          Provable outcomes for multi-party agreements, dispute-aware settlement, and composable primitives that developers can embed into
+          smart contracts and higher-layer applications.
         </p>
       </div>
     </section>
@@ -397,11 +398,11 @@
       <div class="panel">
         <h3>What makes TrustFlow different</h3>
         <ul class="list">
-          <li><strong>Coordination-first:</strong> focuses on multi-party workflow integrity rather than single-app logic.</li>
-          <li><strong>Trust-minimized:</strong> enforces critical transitions with on-chain commitments and verifiable evidence.</li>
-          <li><strong>Composable primitives:</strong> developers integrate standardized workflow trust objects into smart contracts.</li>
-          <li><strong>Audit-ready:</strong> designed for traceability, replayability, and compliance verification.</li>
-          <li><strong>Demo-driven validation:</strong> a car-rental simulation demonstrates end-to-end fund movement across event states.</li>
+          <li><strong>Protocol-first:</strong> a reusable primitive for verifiable execution, not a vertical app.</li>
+          <li><strong>Trust-minimized settlement:</strong> critical transitions are evidenced off-chain and committed on-chain.</li>
+          <li><strong>Composable primitives:</strong> smart contracts consume TrustFlow state commitments as coordination inputs.</li>
+          <li><strong>Audit-ready:</strong> replayable integrity checks and evidence commitments support compliance and disputes.</li>
+          <li><strong>Demo-driven validation:</strong> a car-rental simulation proves end-to-end execution → settlement, including disputes.</li>
         </ul>
 		<div class="section">
 		  <h3>Demo validation</h3>
@@ -431,10 +432,12 @@
         <div class="section">
           <h3>Potential use cases</h3>
           <ul class="list">
+            <li>Installment-based services and conditional releases (training, courses, delivery milestones)</li>
+            <li>Usage-based memberships and pay-per-use access rights</li>
             <li>Multi-party contractual execution (escrow, deposits, milestones)</li>
             <li>Compliance workflows and attestations</li>
-            <li>Inter-org approvals and governance processes</li>
-            <li>Cross-system coordination for enterprise + Web3 integration</li>
+            <li>Inter-org approvals, governance, and reconciliation</li>
+            <li>Enterprise ↔ Web3 coordination (auditability + settlement)</li>
           </ul>
         </div>
       </div>
@@ -444,9 +447,9 @@
       <div class="panel">
         <h3>Roadmap (indicative)</h3>
         <ul class="list">
-          <li><strong>Phase 1 (MVP):</strong> minimal workflow state machine, on-chain anchoring, reference spec, and sample integrations.</li>
-          <li><strong>Phase 2:</strong> developer SDK, templates for common workflows, improved evidence/attestation model.</li>
-          <li><strong>Phase 3:</strong> security review, ecosystem pilots, and broader composability with Ethereum tooling.</li>
+          <li><strong>Phase 1 (MVP):</strong> minimal workflow state machine, evidence model, on-chain anchoring, and reference spec.</li>
+          <li><strong>Phase 2:</strong> developer SDK, templates for common workflows, improved attestation + dispute interfaces.</li>
+          <li><strong>Phase 3:</strong> security review, ecosystem pilots, and deeper composability with Ethereum tooling.</li>
         </ul>
       </div>
 
@@ -523,7 +526,7 @@
     </section>
 
     <footer class="footer">
-      <div><strong>Note for grant submissions:</strong> This page is designed to be a stable, reviewer-friendly project overview (not marketing).</div>
+      <div><strong>Note for grant submissions:</strong> This page is designed to be a stable, reviewer-friendly project overview (not marketing). TrustFlow is not a vertical escrow app; it is a protocol primitive for verifiable execution and settlement.</div>
       <div style="margin-top:6px">© <span id="y"></span> TrustFlow. All information is subject to iteration as the protocol evolves.</div>
     </footer>
   </div>
